@@ -1,0 +1,38 @@
+{
+  "sqs-lambda-hello-world": {
+    "int": {
+      "component": {
+        "account_alias": "modav-development",
+        "region": "eu-west-1",
+        "stack_name": "IntModavSqsLambdaHelloWorld"
+      },
+      "ispy": {
+        "account_alias": "bbc-production",
+        "region": "eu-west-1",
+        "stack_name": "IntModavSqsLambdaHelloWorldIspy"
+      },
+      "resource": {
+        "account_alias": "modav-development",
+        "region": "eu-west-1",
+        "stack_name": "IntModavSqsLambdaHelloWorldResources"
+      }
+    },
+    "test": {
+      "component": {
+        "account_alias": "modav-development",
+        "region": "eu-west-1",
+        "stack_name": "TestModavSqsLambdaHelloWorld"
+      },
+      "ispy": {
+        "account_alias": "bbc-production",
+        "region": "eu-west-1",
+        "stack_name": "TestModavSqsLambdaHelloWorldIspy"
+      },
+      "resource": {
+        "account_alias": "modav-development",
+        "region": "eu-west-1",
+        "stack_name": "TestModavSqsLambdaHelloWorldResources"
+      }
+    }
+  }
+}

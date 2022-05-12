@@ -1,0 +1,11 @@
+#!/bin/bash
+set -eu
+# This script starts the application.  It is used by the cucumber tests (under-test.rb).
+
+BASE_DIR="$( dirname "$0" )"
+
+# 2>&1 because that makes life much easier in under-test.rb
+exec 2>&1
+
+jar="$( echo "$BASE_DIR"/target/sqs-lambda-helloworld-*-fat-tests.jar )"
+exec java -jar "$jar" "$@"

@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+from mediaservices_troposphere import component_config
+from mediaservices_troposphere.base_template import BaseTemplateBuilder
+from mediaservices_troposphere.ispy import TurncoatSubscriptionBuilder
+
+if __name__ == '__main__':
+    COMPONENT_NAME = 'SqsLambdaHelloWorld'
+    PROJECT_NAME = 'sqs-lambda-hello-world'
+    RESOURCES_STACK = 'SqsLambdaHelloWorldResources'
+    ACCOUNT_NUMBERS = {
+        'int': '038610054328',   # modav-development
+        'test': '038610054328',  # modav-development
+        'live': '127888728614',  # modav-production
+    }
+
+    t = BaseTemplateBuilder(COMPONENT_NAME, PROJECT_NAME).build()
+
+    TurncoatSubscriptionBuilder() \
+        .with_ispy_topic_subscription() \
+        .fill_cross_account_params(RESOURCES_STACK, ACCOUNT_NUMBERS[component_config.get(component_config.ENV)]) \
+        .add_to_template(t)
+
+    print(t.to_json())
+

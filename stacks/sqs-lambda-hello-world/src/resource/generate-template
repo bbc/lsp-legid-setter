@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+from mediaservices_troposphere.base_template import BaseTemplateBuilder
+from mediaservices_troposphere.ispy import IspyTopicResourceBuilder
+from mediaservices_troposphere.queue import QueuePatternResourceBuilder, QueueResourceBuilder
+from mediaservices_troposphere.topic import TopicResourceBuilder
+
+if __name__ == '__main__':
+    RUNBOOK = 'https://confluence.dev.bbc.co.uk/pages/display/modav/'  # TODO RUNBOOK
+    COMPONENT_NAME = 'SqsLambdaHelloWorld'
+    PROJECT_NAME = 'sqs-lambda-hello-world'
+
+    t = BaseTemplateBuilder(COMPONENT_NAME, PROJECT_NAME).build()
+
+    # input queue (and bmq and dlq)
+    QueuePatternResourceBuilder() \
+        .with_fail_queue() \
+        .with_alarms(20000, RUNBOOK, severity='warning') \
+        .with_visibility_timeout(60) \
+        .add_to_template(t)
+
+    # ispy topic
+    IspyTopicResourceBuilder().add_to_template(t)
+
+    # output topic
+    TopicResourceBuilder("Output").add_to_template(t)
+
+    print(t.to_json())

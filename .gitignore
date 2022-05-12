@@ -1,0 +1,47 @@
+# Stacks
+tmp/
+
+# OSX
+.DS_Store
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# VS Code
+.vscode
+
+# IDEA
+.idea
+*.iml
+
+# eclipse project file
+.settings/
+.classpath
+.project
+
+# NetBeans
+nbactions.xml
+nbbuild/
+nbdist/
+nbproject/
+nb-configuration.xml
+
+# Vim
+*.swp
+*.swo
+
+# Python
+venv/
+
+# Component tests
+build.zip
+test-classes.zip
