@@ -1,4 +1,4 @@
-package uk.co.bbc.sqs_lambda_hello_world;
+package uk.co.bbc.sqs_lambda_lsp_legid_setter;
 
 import uk.co.bbc.freeman.aws.FailMessageHandler;
 import uk.co.bbc.freeman.ispy.IspyingExceptionHandler;
@@ -14,9 +14,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.bbc.config_fetcher.ConfigFile;
-import uk.co.bbc.config_fetcher.ConfigFiles;
-import uk.co.bbc.config_fetcher.aws.IspyingConfigFile;
 import uk.co.bbc.freeman.aws.MessageIdReceived;
 import uk.co.bbc.freeman.aws.SendToSns;
 import uk.co.bbc.freeman.aws.SnsJsonExtractor;
@@ -116,8 +113,7 @@ public class Main implements RequestHandler<SQSEvent, Void> {
             } catch (IspyerInstantiationException ex) {
                 throw new RuntimeException("Failed to create ispyer", ex);
             }
-            ConfigFile<ExampleJustConfig> justConfigFile = initialiseConfigFile(env, clientProvider, ispyer);
-            helloWorldHandler = new SqsLambdaHelloWorld(justConfigFile);
+            helloWorldHandler = new SqsLambdaHelloWorld();
 
             badMessageHandler = new BadMessageHandler(clientProvider.provideSqsClient(), env.getBadMessageQueueUrl(), COMPONENT_NAME);
             failMessageHandler = new FailMessageHandler(clientProvider.provideSqsClient(), env.getFailMessageQueueUrl(), COMPONENT_NAME);
@@ -153,24 +149,5 @@ public class Main implements RequestHandler<SQSEvent, Void> {
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                     .toString();
         }
-    }
-
-    /**
-     * @return A valid, loaded config file instance.
-     * @throws RuntimeException when loaded has failed
-     */
-    private ConfigFile<ExampleJustConfig> initialiseConfigFile(Environment env, AwsClientProvider clientProvider, Ispyer ispyer) {
-        ConfigFile<ExampleJustConfig> justConfigFile = ConfigFiles.newConfigFile(
-                env.getExampleJustConfigFilename(),
-                new ExampleJustConfigParser(),
-                clientProvider.provideS3Client()
-        );
-        justConfigFile = new IspyingConfigFile<>(new IspyContext(ispyer).withEventNamePrefix(ISPY_EVENT_PREFIX), justConfigFile);
-        try {
-            justConfigFile.call();
-        } catch (Exception e) {
-            throw new RuntimeException("failed to initialise config file on startup: " + justConfigFile, e);
-        }
-        return justConfigFile;
     }
 }

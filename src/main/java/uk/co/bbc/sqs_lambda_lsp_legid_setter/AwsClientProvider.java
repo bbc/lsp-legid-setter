@@ -1,4 +1,4 @@
-package uk.co.bbc.sqs_lambda_hello_world;
+package uk.co.bbc.sqs_lambda_lsp_legid_setter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

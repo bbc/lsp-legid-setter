@@ -5,6 +5,7 @@ require 'aws-helper-v2/s3'
 require 'erubis'
 require 'ispy'
 require 'json'
+require 'rest-assured'
 require 'rest-client'
 require 'mod_av_cucumber_env'
 
@@ -44,14 +45,15 @@ AfterConfiguration do
     env: {
       'BAD_MESSAGE_QUEUE_URL' => SQS.urls[:BMQ],
       'FAIL_MESSAGE_QUEUE_URL' => SQS.urls[:FMQ],
-      'OUTPUT_TOPIC_ARN' => OUTPUT_TOPIC_ARN
+      'OUTPUT_TOPIC_ARN' => OUTPUT_TOPIC_ARN,
+      'RIBBON_URL' => 'http://127.0.0.1:5432'
     }
   )
   BASE_URL = under_test.base_url
+  RestAssured::Server.start(database: ':memory:', port: 5432)
 end
 
 Before do
   fixtures_dir = File.expand_path('../../fixtures', File.dirname(__FILE__))
-  hello_world_filename = 'sqs-lambda-hello-world.json'
-  AwsHelperV2::S3.upload_file(S3_BUCKET, "#{JUST_CONFIG_PREFIX}/#{hello_world_filename}", "#{fixtures_dir}/#{hello_world_filename}")
+  RestClient.delete "#{RestAssured::Server.address}/doubles/all"
 end

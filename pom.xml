@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>uk.co.bbc</groupId>
-    <artifactId>sqs-lambda-helloworld</artifactId>
+    <artifactId>lsp-legid-setter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -86,33 +86,6 @@
         </dependency>
 
         <!-- bbc -->
-        <dependency>
-            <groupId>uk.co.bbc.config-fetcher</groupId>
-            <artifactId>config-fetcher-aws</artifactId>
-            <version>${config-fetcher.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>uk.co.bbc.config-fetcher</groupId>
-            <artifactId>config-fetcher-just-config</artifactId>
-            <version>${config-fetcher.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>uk.co.bbc.config-fetcher</groupId>
-            <artifactId>config-fetcher-core</artifactId>
-            <version>${config-fetcher.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>uk.co.bbc.ispy</groupId>
             <artifactId>ispy-java-aws</artifactId>
