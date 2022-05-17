@@ -17,7 +17,7 @@ public class Environment {
     private static final String FAIL_MESSAGE_QUEUE_URL_NAME = "FAIL_MESSAGE_QUEUE_URL";
     private static final String ENVIRONMENT = "ENVIRONMENT";
     private static final String ISPY_TOPIC_ARN_NAME = "ISPY_TOPIC_ARN";
-    private static final String OUTPUT_TOPIC_ARN_NAME = "OUTPUT_TOPIC_ARN";
+    private static final String RIBBON_URL = "RIBBON_URL";
 
     private String get(String key) {
         String s = System.getenv(key);
@@ -41,11 +41,11 @@ public class Environment {
         return get(ISPY_TOPIC_ARN_NAME);
     }
 
-    public String getOutputTopicArn() {
-        return get(OUTPUT_TOPIC_ARN_NAME);
-    }
-
     public String getRegion() {
         return get(AWS_REGION);
+    }
+
+    public String getRibbonUrl() {
+        return get(RIBBON_URL);
     }
 }

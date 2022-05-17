@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.bbc.freeman.aws.MessageIdReceived;
-import uk.co.bbc.freeman.aws.SendToSns;
 import uk.co.bbc.freeman.aws.SnsJsonExtractor;
 import uk.co.bbc.freeman.aws.SnsJsonUnwrapper;
 import uk.co.bbc.freeman.core.Handler;
@@ -30,6 +29,9 @@ import uk.co.bbc.ispy.Ispy;
 import uk.co.bbc.ispy.Ispyer;
 import uk.co.bbc.ispy.IspyerInstantiationException;
 import uk.co.bbc.ispy.core.IspyPreparer;
+import uk.co.bbc.lsp_legid_setter.exception.RibbonException;
+import uk.co.bbc.lsp_legid_setter.ribbon.HttpClientProvider;
+import uk.co.bbc.lsp_legid_setter.ribbon.RibbonClient;
 
 public class Main implements RequestHandler<SQSEvent, Void> {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
@@ -44,7 +46,6 @@ public class Main implements RequestHandler<SQSEvent, Void> {
     private Handler<SQSMessage> helloWorldHandler;
     private BadMessageHandler badMessageHandler;
     private Ispyer ispyer;
-    private SendToSns<SQSMessage> sendToSns;
 
     /**
      * Public, Zero-argument constructor is required by λ.
@@ -55,13 +56,11 @@ public class Main implements RequestHandler<SQSEvent, Void> {
     Main(
             Handler<SQSMessage> helloWorldHandler,
             Handler<SQSMessage> xmlParser,
-            SendToSns<SQSMessage> sendToSns,
             BadMessageHandler badMessageHandler,
             Ispyer ispyer
     ) {
         this.helloWorldHandler = helloWorldHandler;
         this.xmlParser = xmlParser;
-        this.sendToSns = sendToSns;
         this.badMessageHandler = badMessageHandler;
         this.ispyer = ispyer;
     }
@@ -74,16 +73,15 @@ public class Main implements RequestHandler<SQSEvent, Void> {
         event.getRecords().stream()
                 .map(LambdaEvent::new)
                 .map(addExceptionHandler(badMessageHandler, JsonParseException.class))
-                .map(addExceptionHandler(new IspyingExceptionHandler<>() /*, no exception filters, catch all. */))
+                .map(addExceptionHandler(new IspyingExceptionHandler<>(), RibbonException.class))
                 .map(addIspyContextToEvent(ispyer, ISPY_EVENT_PREFIX))
                 .map(makeSafe(new MessageIdReceived(new SnsJsonExtractor())))
                 .map(makeSafe(new SnsJsonUnwrapper(new SnsJsonExtractor())))
                 .map(makeSafe(xmlParser))
                 .filter(LambdaEvent::isNotException) // Don't try to do any more processing of jobs that have already failed.
                 .map(fillIspyContent())
-                .map(new SimpleIspy<>("info.message.received"))
+                .map(new SimpleIspy<>("livestream-created.received"))
                 .map(makeSafe(helloWorldHandler))
-                .map(makeSafe(sendToSns))
                 .filter(LambdaEvent::isNotException)
                 .forEach(new SimpleIspy<SQSMessage>("info.message.sent").toConsumer());
 
@@ -100,7 +98,7 @@ public class Main implements RequestHandler<SQSEvent, Void> {
      * @param context
      */
     private void initialiseOnFirstCall(Context context) {
-        if (ispyer == null || helloWorldHandler == null || badMessageHandler == null || sendToSns == null) {
+        if (ispyer == null || helloWorldHandler == null || badMessageHandler == null) {
             IspyPreparer preparer = new IspyPreparer(new StaticParams(context).getIspyMapSupplier());
             try {
                 ispyer = Ispy.newIspyer(env.getIspyTopicArn(), clientProvider.provideSnsClient(), preparer);
@@ -110,7 +108,7 @@ public class Main implements RequestHandler<SQSEvent, Void> {
             helloWorldHandler = new SqsLambdaHelloWorld();
 
             badMessageHandler = new BadMessageHandler(clientProvider.provideSqsClient(), env.getBadMessageQueueUrl(), COMPONENT_NAME);
-            sendToSns = new SendToSns<>(clientProvider.provideSnsClient(), env.getOutputTopicArn());
+            new RibbonClient(new HttpClientProvider(env.getEnvironmentName()).provide(), env.getRibbonUrl());
         }
     }
 
