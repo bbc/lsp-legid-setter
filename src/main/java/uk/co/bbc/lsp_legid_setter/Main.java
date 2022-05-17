@@ -1,6 +1,5 @@
 package uk.co.bbc.lsp_legid_setter;
 
-import uk.co.bbc.freeman.aws.FailMessageHandler;
 import uk.co.bbc.freeman.ispy.IspyingExceptionHandler;
 import uk.co.bbc.freeman.aws.BadMessageHandler;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -30,14 +29,13 @@ import uk.co.bbc.freeman.ispy.SimpleIspy;
 import uk.co.bbc.ispy.Ispy;
 import uk.co.bbc.ispy.Ispyer;
 import uk.co.bbc.ispy.IspyerInstantiationException;
-import uk.co.bbc.ispy.core.IspyContext;
 import uk.co.bbc.ispy.core.IspyPreparer;
 
 public class Main implements RequestHandler<SQSEvent, Void> {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    private static final String ISPY_EVENT_PREFIX = "sqs-lambda-hello-world";
-    private static final String COMPONENT_NAME = "sqslambdahelloworld";
+    private static final String ISPY_EVENT_PREFIX = "lsp-legid-setter";
+    private static final String COMPONENT_NAME = "LspLegidSetter";
 
     private final Environment env = new Environment();
     private final AwsClientProvider clientProvider = new AwsClientProvider(env);
@@ -45,7 +43,6 @@ public class Main implements RequestHandler<SQSEvent, Void> {
     private Handler<SQSMessage> xmlParser = new XmlParser();
     private Handler<SQSMessage> helloWorldHandler;
     private BadMessageHandler badMessageHandler;
-    private FailMessageHandler failMessageHandler;
     private Ispyer ispyer;
     private SendToSns<SQSMessage> sendToSns;
 
@@ -60,14 +57,12 @@ public class Main implements RequestHandler<SQSEvent, Void> {
             Handler<SQSMessage> xmlParser,
             SendToSns<SQSMessage> sendToSns,
             BadMessageHandler badMessageHandler,
-            FailMessageHandler failMessageHandler,
             Ispyer ispyer
     ) {
         this.helloWorldHandler = helloWorldHandler;
         this.xmlParser = xmlParser;
         this.sendToSns = sendToSns;
         this.badMessageHandler = badMessageHandler;
-        this.failMessageHandler = failMessageHandler;
         this.ispyer = ispyer;
     }
 
@@ -79,7 +74,6 @@ public class Main implements RequestHandler<SQSEvent, Void> {
         event.getRecords().stream()
                 .map(LambdaEvent::new)
                 .map(addExceptionHandler(badMessageHandler, JsonParseException.class))
-                .map(addExceptionHandler(failMessageHandler, MatchNotFoundException.class))
                 .map(addExceptionHandler(new IspyingExceptionHandler<>() /*, no exception filters, catch all. */))
                 .map(addIspyContextToEvent(ispyer, ISPY_EVENT_PREFIX))
                 .map(makeSafe(new MessageIdReceived(new SnsJsonExtractor())))
@@ -116,7 +110,6 @@ public class Main implements RequestHandler<SQSEvent, Void> {
             helloWorldHandler = new SqsLambdaHelloWorld();
 
             badMessageHandler = new BadMessageHandler(clientProvider.provideSqsClient(), env.getBadMessageQueueUrl(), COMPONENT_NAME);
-            failMessageHandler = new FailMessageHandler(clientProvider.provideSqsClient(), env.getFailMessageQueueUrl(), COMPONENT_NAME);
             sendToSns = new SendToSns<>(clientProvider.provideSnsClient(), env.getOutputTopicArn());
         }
     }

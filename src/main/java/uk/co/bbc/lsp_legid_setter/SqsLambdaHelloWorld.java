@@ -10,7 +10,7 @@ public class SqsLambdaHelloWorld implements Handler<SQSEvent.SQSMessage> {
     }
 
     @Override
-    public LambdaEvent<SQSEvent.SQSMessage> apply(LambdaEvent<SQSEvent.SQSMessage> event) throws MatchNotFoundException {
+    public LambdaEvent<SQSEvent.SQSMessage> apply(LambdaEvent<SQSEvent.SQSMessage> event) {
 
         ExampleSqsRequest request = event.getBody(ExampleSqsRequest.class);
 
