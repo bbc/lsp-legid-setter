@@ -1,4 +1,4 @@
-package uk.co.bbc.sqs_lambda_lsp_legid_setter;
+package uk.co.bbc.lsp_legid_setter;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
@@ -20,9 +20,9 @@ import uk.co.bbc.freeman.core.LambdaEvent;
 import uk.co.bbc.freeman.ispy.LambdaEventIspyContext;
 import uk.co.bbc.ispy.Ispyer;
 import uk.co.bbc.ispy.core.IspyContext;
-import uk.co.bbc.sqs_lambda_lsp_legid_setter.ExampleSqsRequest;
-import uk.co.bbc.sqs_lambda_lsp_legid_setter.Main;
-import uk.co.bbc.sqs_lambda_lsp_legid_setter.MatchNotFoundException;
+import uk.co.bbc.lsp_legid_setter.ExampleSqsRequest;
+import uk.co.bbc.lsp_legid_setter.Main;
+import uk.co.bbc.lsp_legid_setter.MatchNotFoundException;
 
 import java.util.List;
 import java.util.Map;

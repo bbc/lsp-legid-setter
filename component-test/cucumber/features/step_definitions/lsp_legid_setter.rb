@@ -6,19 +6,6 @@ Given('lsp-legid-setter lambda exists') do
   puts '---------------'
 end
 
-When('an SQS message is sent to the queue') do
-  message = {
-    records: [
-      {
-        messageId: 'dummy_message_id',
-        awsRegion: 'eu-west-1',
-        body: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><matchRequest providerActivityId="random_activity_id" matchId="match1"/>'
-      }
-    ]
-  }
-  RestClient.post(BASE_URL, message.to_json)
-end
-
 When('a Livestream Created message is sent to the queue') do
   @deel_message = {
     header: {
@@ -33,7 +20,7 @@ When('a Livestream Created message is sent to the queue') do
     messageContext: {
       domain: 'bbc.content.distribution',
       function: 'liveEncode',
-      statement: 'livestreamFinished',
+      statement: 'livestreamCreated',
       contentTypes: [
         'media'
       ]
@@ -42,9 +29,7 @@ When('a Livestream Created message is sent to the queue') do
       entityDescription: {},
       payload: {
         id: 'pips-pid-1234',
-        event: 'LIVESTREAM_FINISHED',
-        inputName: 'inputName',
-        encoderPipeline: 'encoderPipeline',
+        event: 'LIVESTREAM_CREATED',
         encoderTimestamp: 'encoderTimestamp'
       }
     }
@@ -83,7 +68,7 @@ Given('Ribbon Get leg endpoint will respond with {int}') do |status|
   else
     content = "#{status} body"
   end
-  @double = RestAssured::Double.create(
+  @ribbon_get_leg_double = RestAssured::Double.create(
     fullpath: '/packager/pips-pid-1234/leg',
     verb: 'GET',
     status: status,
@@ -105,30 +90,6 @@ When('a bad SQS message is sent to the queue') do
   RestClient.post(BASE_URL, message.to_json)
 end
 
-Then('the AWS lambda is invoked') do
-  # check for invoked message with our message id
-  expected_payload = {
-    event_name: 'sqs-lambda-hello-world.info.message.received',
-    message_id_received: 'dummy_message_id'
-  }
-  event = ISPY.wait_find(expected_payload, true)
-  # save this for later checks
-  @aws_request_id = event[:aws_request_id]
-end
-
-
-Then('the processing is finished') do
-  # just check ispy message
-  expected_payload = {
-    event_name: 'sqs-lambda-hello-world.info.message.sent',
-    aws_request_id: @aws_request_id,
-    message_id_received: 'dummy_message_id'
-  }
-  event = ISPY.wait_find(expected_payload, true)
-  puts "event: #{event}"
-  expect(event[:message_id_sent]).not_to be(nil)
-end
-
 Then('a message appears in the Bad Message Queue') do
   sqs_message = SQS.receive_message('BMQ', 30)
   puts "BMQ: #{sqs_message}"
@@ -136,11 +97,22 @@ Then('a message appears in the Bad Message Queue') do
   expect(sqs_message.body).to include('<badmsg>')
 end
 
-Then('the AWS lambda reports the exception') do
-  expected_payload = { event_name: 'sqs-lambda-hello-world.error.exception' }
-  ISPY.wait_find(expected_payload, true)
-end
-
 Then('the AWS lambda is terminated') do
   expect(@lambda_response.code).to eq(400)
+end
+
+Then('the iSpy event {word} is emitted') do |message|
+  expected_payload = {
+    event_name: "lsp-legid-setter.#{message}",
+    aws_request_id: @aws_request_id,
+    message_id_received: 'dummy_message_id',
+    activity_id: 'correlation_id',
+    id: 'pips-pid-1234'
+  }
+  event = ISPY.wait_find(expected_payload, true)
+  puts "event: #{event}"
+end
+
+Given('Ribbon Get leg endpoint is called') do |status|
+  @ribbon_get_leg_double.wait_for_requests(1)
 end

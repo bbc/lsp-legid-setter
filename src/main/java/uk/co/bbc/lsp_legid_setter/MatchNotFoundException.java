@@ -1,4 +1,4 @@
-package uk.co.bbc.sqs_lambda_lsp_legid_setter;
+package uk.co.bbc.lsp_legid_setter;
 
 public class MatchNotFoundException extends Exception {
 

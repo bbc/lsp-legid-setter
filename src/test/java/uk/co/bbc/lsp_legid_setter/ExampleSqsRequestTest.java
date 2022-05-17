@@ -1,9 +1,9 @@
-package uk.co.bbc.sqs_lambda_lsp_legid_setter;
+package uk.co.bbc.lsp_legid_setter;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-import uk.co.bbc.sqs_lambda_lsp_legid_setter.ExampleSqsRequest;
+import uk.co.bbc.lsp_legid_setter.ExampleSqsRequest;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

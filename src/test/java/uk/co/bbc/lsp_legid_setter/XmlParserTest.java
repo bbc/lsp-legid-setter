@@ -1,4 +1,4 @@
-package uk.co.bbc.sqs_lambda_lsp_legid_setter;
+package uk.co.bbc.lsp_legid_setter;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import java.io.IOException;
@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import uk.co.bbc.freeman.core.LambdaEvent;
-import uk.co.bbc.sqs_lambda_lsp_legid_setter.ExampleSqsRequest;
-import uk.co.bbc.sqs_lambda_lsp_legid_setter.XmlParser;
+import uk.co.bbc.lsp_legid_setter.ExampleSqsRequest;
+import uk.co.bbc.lsp_legid_setter.XmlParser;
 
 
 class XmlParserTest {
