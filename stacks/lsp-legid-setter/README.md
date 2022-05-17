@@ -1,7 +1,7 @@
 # Deploying Stacks
 
 This file
-IntModavSqsLambdaHelloWor-SqsLambdaHelloWorldFunct-18JB0QA2BLWGQ.yaml
+IntModavLspLegidSetter-xxx.yaml
 is the yaml definition of the function, with manually-added SQS trigger, exported from AWS.
 
 The cloudformation equivalent is what we should be aiming for in the stacks files.

@@ -5,9 +5,9 @@ from mediaservices_troposphere.base_template import BaseTemplateBuilder
 from mediaservices_troposphere.ispy import TurncoatSubscriptionBuilder
 
 if __name__ == '__main__':
-    COMPONENT_NAME = 'SqsLambdaHelloWorld'
-    PROJECT_NAME = 'sqs-lambda-hello-world'
-    RESOURCES_STACK = 'SqsLambdaHelloWorldResources'
+    COMPONENT_NAME = 'LspLegidSetter'
+    PROJECT_NAME = 'lsp-legid-setter'
+    RESOURCES_STACK = 'LspLegidSetterResources'
     ACCOUNT_NUMBERS = {
         'int': '038610054328',   # modav-development
         'test': '038610054328',  # modav-development

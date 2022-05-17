@@ -3,7 +3,6 @@
 from cosmosTroposphere.actions import SNSActions
 from mediaservices_troposphere import component_config
 from mediaservices_troposphere.ispy import IspyPolicyBuilder
-from mediaservices_troposphere.just_config import JustConfigPolicyBuilder
 from mediaservices_troposphere.lambda_template import LambdaTemplateBuilder
 from mediaservices_troposphere.output import StackNameEnvImportValue
 from mediaservices_troposphere.policy import PolicyBuilder
@@ -13,9 +12,9 @@ from troposphere.awslambda import Code
 
 if __name__ == '__main__':
 
-    COMPONENT_NAME = 'SqsLambdaHelloWorld'
-    PROJECT_NAME = 'sqs-lambda-hello-world'
-    RUNBOOK = 'https://confluence.dev.bbc.co.uk/display/modav/Video+Factory+ExampleLambda+Run+Book'
+    COMPONENT_NAME = 'LspLegidSetter'
+    PROJECT_NAME = 'lsp-legid-setter'
+    RUNBOOK = 'https://confluence.dev.bbc.co.uk/display/modav/Video+Factory+ExampleLambda+Run+Book' # TODO
 
     RESOURCES_STACK = 'Modav' + COMPONENT_NAME + 'Resources'
     SHARED_RESOURCES_STACK = 'ModavSharedResources'
@@ -24,11 +23,7 @@ if __name__ == '__main__':
 
     environment_variables = {
         'BAD_MESSAGE_QUEUE_URL': StackNameEnvImportValue(RESOURCES_STACK, 'BadMessageQueueUrl'),
-        'FAIL_MESSAGE_QUEUE_URL': StackNameEnvImportValue(RESOURCES_STACK, 'FailQueueUrl'),
         'ISPY_TOPIC_ARN': StackNameEnvImportValue(RESOURCES_STACK, 'IspyTopicArn'),
-        'JUST_CONFIG_FILENAME': Join('', ['s3://',
-                                          StackNameEnvImportValue(SHARED_RESOURCES_STACK, 'ConfigurationBucketName'),
-                                          '/just-config/sqs-lambda-hello-world.json']),
         'OUTPUT_TOPIC_ARN': output_topic_arn,
     }
 
@@ -44,11 +39,11 @@ if __name__ == '__main__':
             S3Bucket=StackNameEnvImportValue(SHARED_RESOURCES_STACK, 'ConfigurationBucketName'),
             S3Key='lambda/noop.node.zip'
         ),
-        'uk.co.bbc.sqs_lambda_hello_world.Main',
+        'uk.co.bbc.lsp_legid_setter.Main',
         'java11',
         memory_size=1024,
         timeout=60,
-        template_description='Sqs Lambda Hello World') \
+        template_description='Lsp Legid Setter') \
         .with_alias(component_config.get(component_config.ENV)) \
         .with_environment_variables(environment_variables) \
         .with_error_alarm(3, RUNBOOK, period_in_seconds=20 * 60) \
@@ -74,6 +69,5 @@ if __name__ == '__main__':
 
     queue_policy.add_to_template(t)
     IspyPolicyBuilder(RESOURCES_STACK).add_to_template(t)
-    JustConfigPolicyBuilder().add_to_template(t)
 
     print(t.to_json())

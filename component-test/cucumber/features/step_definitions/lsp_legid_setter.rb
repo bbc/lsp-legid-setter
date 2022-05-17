@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-Given('an sqs-lambda-hello-world') do
+Given('lsp-legid-setter lambda exists') do
   puts '---------------'
-  puts '- Hello World -'
+  puts '- lsp-legid-setter -'
   puts '---------------'
 end
 
@@ -19,17 +19,76 @@ When('an SQS message is sent to the queue') do
   RestClient.post(BASE_URL, message.to_json)
 end
 
-When('a SQS message is sent to the queue with a match not in the config') do
-  message = {
+When('a Livestream Created message is sent to the queue') do
+  @deel_message = {
+    header: {
+      deelVersion: '2-0-0',
+      correlationID: 'correlation_id',
+      sourceMessageID: 'source_message_id',
+      eventTimestamp: '2019-12-03T10:45:01.555Z',
+      messageType: 'STATUS',
+      primaryEntityID: 'pips-pid-1234',
+      origin: 'lsp-livestream-finished-adapter'
+    },
+    messageContext: {
+      domain: 'bbc.content.distribution',
+      function: 'liveEncode',
+      statement: 'livestreamFinished',
+      contentTypes: [
+        'media'
+      ]
+    },
+    data: {
+      entityDescription: {},
+      payload: {
+        id: 'pips-pid-1234',
+        event: 'LIVESTREAM_FINISHED',
+        inputName: 'inputName',
+        encoderPipeline: 'encoderPipeline',
+        encoderTimestamp: 'encoderTimestamp'
+      }
+    }
+  }
+
+  event_bus_message = {
+    version: '0',
+    id: '4348494e-a677-5dc4-81a3-4b28e9611ef2',
+    'detail-type': 'detail-type',
+    source: 'source',
+    account: '123456789',
+    time: '2022-02-14T15:24:57Z',
+    region: 'eu-west-1',
+    resources: [],
+    detail: @deel_message
+  }
+  sqs_message = {
     records: [
       {
         messageId: 'dummy_message_id',
         awsRegion: 'eu-west-1',
-        body: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><matchRequest providerActivityId="random_activity_id" matchId="failure"/>'
+        body: JSON.generate(event_bus_message)
       }
     ]
   }
-  RestClient.post(BASE_URL, message.to_json)
+  begin
+    RestClient.post(BASE_URL, sqs_message.to_json)
+  rescue RestClient::BadRequest
+    @lambda_failed = true
+  end
+end
+
+Given('Ribbon Get leg endpoint will respond with {int}') do |status|
+  if status == "200"
+    content = '{"leg":"indigo"}'
+  else
+    content = "#{status} body"
+  end
+  @double = RestAssured::Double.create(
+    fullpath: '/packager/pips-pid-1234/leg',
+    verb: 'GET',
+    status: status,
+    content: content
+  )
 end
 
 When('a bad SQS message is sent to the queue') do
@@ -57,15 +116,6 @@ Then('the AWS lambda is invoked') do
   @aws_request_id = event[:aws_request_id]
 end
 
-# this is checking the sns via the subscription to the output topic
-Then('a message is sent to the output topic') do
-  sqs_message = SQS.receive_message('OUT', 30)
-  puts "OUT: #{sqs_message}"
-  puts "OUT: #{sqs_message.body}"
-  expect(sqs_message).not_to be(nil)
-  expect(sqs_message.message_id).not_to be(nil)
-  # NB the sqs_message message_id is NOT message_id returned from the sns.publish
-end
 
 Then('the processing is finished') do
   # just check ispy message
@@ -84,31 +134,6 @@ Then('a message appears in the Bad Message Queue') do
   puts "BMQ: #{sqs_message}"
 
   expect(sqs_message.body).to include('<badmsg>')
-end
-
-Then('a message appears in the Fail Message Queue') do
-  sqs_message = SQS.receive_message('FMQ', 30)
-  puts "FMQ: #{sqs_message}"
-
-  expect(sqs_message.body).to include('<failmsg>')
-end
-
-Given('a message with a bad matchId is sent to the queue') do
-  message = {
-    records: [
-      {
-        messageId: 'dummy_message_id',
-        awsRegion: 'eu-west-1',
-        body: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><matchRequest providerActivityId="random_activity_id" matchId="forced_failure"/>'
-      }
-    ]
-  }
-  begin
-    RestClient.post(BASE_URL, message.to_json)
-    expect('fail').to eq('test should have thrown an exception')
-  rescue RestClient::ExceptionWithResponse => e
-    @lambda_response = e.response
-  end
 end
 
 Then('the AWS lambda reports the exception') do

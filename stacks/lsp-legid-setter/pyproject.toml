@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "sqs-lambda-helloworld"
+name = "lsp-legid-setter"
 version = "1.0.0"
 description = ""
 authors = []

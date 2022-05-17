@@ -1,37 +1,37 @@
 {
-  "sqs-lambda-hello-world": {
+  "lsp-legid-setter": {
     "int": {
       "component": {
         "account_alias": "modav-development",
         "region": "eu-west-1",
-        "stack_name": "IntModavSqsLambdaHelloWorld"
+        "stack_name": "IntModavLspLegidSetter"
       },
       "ispy": {
         "account_alias": "bbc-production",
         "region": "eu-west-1",
-        "stack_name": "IntModavSqsLambdaHelloWorldIspy"
+        "stack_name": "IntModavLspLegidSetterIspy"
       },
       "resource": {
         "account_alias": "modav-development",
         "region": "eu-west-1",
-        "stack_name": "IntModavSqsLambdaHelloWorldResources"
+        "stack_name": "IntModavLspLegidSetterResources"
       }
     },
     "test": {
       "component": {
         "account_alias": "modav-development",
         "region": "eu-west-1",
-        "stack_name": "TestModavSqsLambdaHelloWorld"
+        "stack_name": "TestModavLspLegidSetter"
       },
       "ispy": {
         "account_alias": "bbc-production",
         "region": "eu-west-1",
-        "stack_name": "TestModavSqsLambdaHelloWorldIspy"
+        "stack_name": "TestModavLspLegidSetterIspy"
       },
       "resource": {
         "account_alias": "modav-development",
         "region": "eu-west-1",
-        "stack_name": "TestModavSqsLambdaHelloWorldResources"
+        "stack_name": "TestModavLspLegidSetterResources"
       }
     }
   }

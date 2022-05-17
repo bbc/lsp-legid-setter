@@ -7,14 +7,13 @@ from mediaservices_troposphere.topic import TopicResourceBuilder
 
 if __name__ == '__main__':
     RUNBOOK = 'https://confluence.dev.bbc.co.uk/pages/display/modav/'  # TODO RUNBOOK
-    COMPONENT_NAME = 'SqsLambdaHelloWorld'
-    PROJECT_NAME = 'sqs-lambda-hello-world'
+    COMPONENT_NAME = 'LspLegidSetter'
+    PROJECT_NAME = 'lsp-legid-setter'
 
     t = BaseTemplateBuilder(COMPONENT_NAME, PROJECT_NAME).build()
 
     # input queue (and bmq and dlq)
     QueuePatternResourceBuilder() \
-        .with_fail_queue() \
         .with_alarms(20000, RUNBOOK, severity='warning') \
         .with_visibility_timeout(60) \
         .add_to_template(t)
