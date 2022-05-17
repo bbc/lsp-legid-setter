@@ -40,6 +40,9 @@ public class RibbonClient {
                 Map<String, String> readValue = objectMapper.readValue(body, Map.class);
                 return readValue.get(LEG);
             }
+            if (status == 404) {
+                return null;
+            }
             throw new RibbonException(String.format("Unexpected [%s], [%s]", status, body));
         }
     }

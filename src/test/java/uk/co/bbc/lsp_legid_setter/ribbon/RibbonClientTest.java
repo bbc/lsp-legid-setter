@@ -54,4 +54,12 @@ public class RibbonClientTest {
         wireMockServer.stubFor(get(PATH).willReturn(aResponse().withStatus(500).withBody("error")));
         assertThrows(RibbonException.class, () -> underTest.getLegId(CVID));
     }
+    
+    
+    @Test
+    void itReturnsNullWhen404Response() throws Exception {
+        wireMockServer.stubFor(get(PATH).willReturn(aResponse().withStatus(404)));
+        assertEquals(null, underTest.getLegId(CVID));
+        WireMock.verify(getRequestedFor(urlEqualTo(PATH)));
+    }
 }
