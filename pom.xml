@@ -23,6 +23,8 @@
         <freeman.version>1.3.0</freeman.version>
         <ispyjava.version>3.0.2</ispyjava.version>
         <httpclient.version>4.5.13</httpclient.version>
+        <lsp-medialive-rest-client.version>2.4.1</lsp-medialive-rest-client.version>
+        <lsp-medialive-domain.version>6.2.2</lsp-medialive-domain.version>
     </properties>
 
     <dependencyManagement>
@@ -120,6 +122,28 @@
             <groupId>uk.co.bbc.freeman</groupId>
             <artifactId>freeman-core</artifactId>
             <version>${freeman.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.bbc.lsp_medialive</groupId>
+            <artifactId>lsp-medialive-domain</artifactId>
+            <version>${lsp-medialive-domain.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>bbc.otg_common</groupId>
+                    <artifactId>tools-validation</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.bbc.lsp_medialive</groupId>
+            <artifactId>lsp-medialive-rest-client</artifactId>
+            <version>${lsp-medialive-rest-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>bbc.otg_common</groupId>
+                    <artifactId>tools-validation</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- slf4j -->

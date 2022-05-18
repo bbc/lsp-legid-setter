@@ -18,6 +18,7 @@ public class Environment {
     private static final String ENVIRONMENT = "ENVIRONMENT";
     private static final String ISPY_TOPIC_ARN_NAME = "ISPY_TOPIC_ARN";
     private static final String RIBBON_URL = "RIBBON_URL";
+    private static final String STATE_API_CHANNELS_ENDPOINT = "STATE_API_CHANNELS_ENDPOINT";
 
     private String get(String key) {
         String s = System.getenv(key);
@@ -47,5 +48,9 @@ public class Environment {
 
     public String getRibbonUrl() {
         return get(RIBBON_URL);
+    }
+    
+    public String getStateApiChannelsEndpoint() {
+        return get(STATE_API_CHANNELS_ENDPOINT);
     }
 }

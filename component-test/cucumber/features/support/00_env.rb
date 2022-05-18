@@ -35,7 +35,8 @@ AfterConfiguration do
     print_lines: true,
     env: {
       'BAD_MESSAGE_QUEUE_URL' => SQS.urls[:BMQ],
-      'RIBBON_URL' => 'http://127.0.0.1:5432'
+      'RIBBON_URL' => 'http://127.0.0.1:5432',
+      'STATE_API_CHANNELS_ENDPOINT' => 'http://127.0.0.1:5432/channels'
     }
   )
   BASE_URL = under_test.base_url

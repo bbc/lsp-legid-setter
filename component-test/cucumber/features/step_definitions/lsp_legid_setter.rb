@@ -64,15 +64,39 @@ end
 
 Given('Ribbon Get leg endpoint will respond with {int}') do |status|
   if status == "200"
-    content = '{"leg":"indigo"}'
+    content = '{"leg":"legId"}'
   else
     content = "#{status} body"
   end
-  @ribbon_get_leg_double = RestAssured::Double.create(
+  @state_get_channel_double = RestAssured::Double.create(
     fullpath: '/packager/pips-pid-1234/leg',
     verb: 'GET',
     status: status,
     content: content
+  )
+end
+
+Given('medialive state api Get channels endpoint will respond with {int}') do |status|
+  if status == "200"
+    content = {
+      "channel_arn" : "Arn://",
+      "state" : "CREATING",
+      "cvid" : "pips-pid-1234",
+      "active_input" : "activeInput",
+      "target_input" : "targetInput",
+      "slate_input_name" : "slateInputName",
+      "leg_id" : "legId",
+      "created_timestamp" : 1578572375000,
+      "last_update_timestamp" : 1578572375257
+    }
+  else
+    content = {}
+  end
+  @ribbon_get_leg_double = RestAssured::Double.create(
+    fullpath: '/channels?cvid=pips-pid-1234',
+    verb: 'GET',
+    status: status,
+    content: JSON.generate(content)
   )
 end
 
@@ -115,4 +139,8 @@ end
 
 Given('Ribbon Get leg endpoint is called') do |status|
   @ribbon_get_leg_double.wait_for_requests(1)
+end
+
+Given('medialive state api Get channels endpoint is called') do |status|
+  @state_get_channel_double.wait_for_requests(1)
 end
