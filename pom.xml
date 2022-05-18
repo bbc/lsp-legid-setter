@@ -25,6 +25,7 @@
         <httpclient.version>4.5.13</httpclient.version>
         <lsp-medialive-rest-client.version>2.4.1</lsp-medialive-rest-client.version>
         <lsp-medialive-domain.version>6.2.2</lsp-medialive-domain.version>
+        <deel.version>2.0.7</deel.version>
     </properties>
 
     <dependencyManagement>
@@ -144,6 +145,11 @@
                     <artifactId>tools-validation</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.bbc.deel</groupId>
+            <artifactId>deel-model-java</artifactId>
+            <version>${deel.version}</version>
         </dependency>
 
         <!-- slf4j -->

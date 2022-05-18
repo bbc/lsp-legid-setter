@@ -36,6 +36,7 @@ AfterConfiguration do
     env: {
       'BAD_MESSAGE_QUEUE_URL' => SQS.urls[:BMQ],
       'RIBBON_URL' => 'http://127.0.0.1:5432',
+      'ENVIRONMENT' => 'Dev',
       'STATE_API_CHANNELS_ENDPOINT' => 'http://127.0.0.1:5432/channels'
     }
   )

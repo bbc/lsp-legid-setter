@@ -68,7 +68,7 @@ Given('Ribbon Get leg endpoint will respond with {int}') do |status|
   else
     content = "#{status} body"
   end
-  @state_get_channel_double = RestAssured::Double.create(
+  @ribbon_get_leg_double = RestAssured::Double.create(
     fullpath: '/packager/pips-pid-1234/leg',
     verb: 'GET',
     status: status,
@@ -79,20 +79,20 @@ end
 Given('medialive state api Get channels endpoint will respond with {int}') do |status|
   if status == "200"
     content = {
-      "channel_arn" : "Arn://",
-      "state" : "CREATING",
-      "cvid" : "pips-pid-1234",
-      "active_input" : "activeInput",
-      "target_input" : "targetInput",
-      "slate_input_name" : "slateInputName",
-      "leg_id" : "legId",
-      "created_timestamp" : 1578572375000,
-      "last_update_timestamp" : 1578572375257
+      "channel_arn" => "Arn",
+      "state" => "CREATING",
+      "cvid" => "pips-pid-1234",
+      "active_input" => "activeInput",
+      "target_input" => "targetInput",
+      "slate_input_name" => "slateInputName",
+      "leg_id" => "legId",
+      "created_timestamp" => "1578572375000",
+      "last_update_timestamp" => "1578572375257"
     }
   else
     content = {}
   end
-  @ribbon_get_leg_double = RestAssured::Double.create(
+  @state_get_channel_double = RestAssured::Double.create(
     fullpath: '/channels?cvid=pips-pid-1234',
     verb: 'GET',
     status: status,
@@ -125,9 +125,9 @@ Then('the AWS lambda is terminated') do
   expect(@lambda_response.code).to eq(400)
 end
 
-Then('the iSpy event {word} is emitted') do |message|
+Then('the iSpy event {string} is emitted') do |message|
   expected_payload = {
-    event_name: "lsp-legid-setter.#{message}",
+    event_name: message,
     aws_request_id: @aws_request_id,
     message_id_received: 'dummy_message_id',
     activity_id: 'correlation_id',
@@ -137,10 +137,10 @@ Then('the iSpy event {word} is emitted') do |message|
   puts "event: #{event}"
 end
 
-Given('Ribbon Get leg endpoint is called') do |status|
+Given('Ribbon Get leg endpoint is called') do
   @ribbon_get_leg_double.wait_for_requests(1)
 end
 
-Given('medialive state api Get channels endpoint is called') do |status|
+Given('medialive state api Get channels endpoint is called') do
   @state_get_channel_double.wait_for_requests(1)
 end

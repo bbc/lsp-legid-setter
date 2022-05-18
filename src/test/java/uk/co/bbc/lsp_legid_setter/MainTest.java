@@ -24,7 +24,6 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,38 +33,33 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MainTest {
 
-    @Mock(lenient = true) private Handler<SQSMessage> helloWorldHandler;
+    @Mock(lenient = true) private Handler<SQSMessage> getLegIdFromRibbon;
     @Mock(lenient = true) private SQSEvent sqsEvent;
     @Mock(lenient = true) private Context context;
     @Mock(lenient = true) private SQSMessage sqsMessage0;
-    @Mock(lenient = true) private SQSMessage sqsMessage1;
-    @Mock(lenient = true) private SQSMessage sqsMessage2;
     @Mock(lenient = true) private BadMessageHandler badMessageHandler;
-    @Mock(lenient = true) private EmptyHandler<SQSMessage> xmlParser;
+    @Mock(lenient = true) private EmptyHandler<SQSMessage> liveStreamEventParser;
     @Mock(lenient = true) private Ispyer ispyer;
     @Captor private ArgumentCaptor<LambdaEvent<SQSMessage>> messageCaptor;
 
     @BeforeEach
     void setup() throws Exception{
-        when(xmlParser.apply(any())).thenCallRealMethod();
+        when(liveStreamEventParser.apply(any())).thenAnswer(i -> i.getArgument(0));;
         when(badMessageHandler.handleException(any(), any())).thenAnswer(i -> i.getArgument(0));
-        when(helloWorldHandler.apply(any())).thenAnswer(i -> i.getArgument(0));
+        when(getLegIdFromRibbon.apply(any())).thenAnswer(i -> i.getArgument(0));
 
-        when(sqsMessage0.getBody()).thenReturn("");
+        when(sqsMessage0.getBody()).thenReturn("{\"detail\": \"value\"}");
         when(sqsMessage0.getMessageId()).thenReturn("");
-        when(sqsMessage1.getBody()).thenReturn("");
-        when(sqsMessage1.getMessageId()).thenReturn("");
-        when(sqsMessage2.getBody()).thenReturn("");
-        when(sqsMessage2.getMessageId()).thenReturn("");
+        when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
     }
 
     @Test
     void testHandleZeroMessages() {
         when(sqsEvent.getRecords()).thenReturn(List.of());
 
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
+        Main undertest = new Main(getLegIdFromRibbon, liveStreamEventParser, badMessageHandler, ispyer);
         undertest.handleRequest(sqsEvent, context);
-        verifyNoInteractions(helloWorldHandler);
+        verifyNoInteractions(getLegIdFromRibbon);
     }
 
     @Test
@@ -73,61 +67,23 @@ class MainTest {
 
         when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
 
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
+        Main undertest = new Main(getLegIdFromRibbon, liveStreamEventParser, badMessageHandler, ispyer);
         undertest.handleRequest(sqsEvent, context);
-        verify(helloWorldHandler).apply(messageCaptor.capture());
+        verify(getLegIdFromRibbon).apply(messageCaptor.capture());
         assertThat(messageCaptor.getValue().getOriginal(), is(sqsMessage0));
-    }
-
-    @Test
-    void testHandleMultipleMessages() throws Exception {
-
-        when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0, sqsMessage1));
-
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
-        undertest.handleRequest(sqsEvent, context);
-        verify(helloWorldHandler, times(2)).apply(messageCaptor.capture());
-        assertThat(messageCaptor.getAllValues().get(0).getOriginal(), is(sqsMessage0));
-        assertThat(messageCaptor.getAllValues().get(1).getOriginal(), is(sqsMessage1));
-
     }
 
     @Test
     void testHandleOneBadMessage() throws Exception {
 
         when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
-        doThrow(new JsonParseException(null, "foo")).when(xmlParser).apply(any());
+        doThrow(new JsonParseException(null, "foo")).when(liveStreamEventParser).apply(any());
 
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
+        Main undertest = new Main(getLegIdFromRibbon, liveStreamEventParser, badMessageHandler, ispyer);
         undertest.handleRequest(sqsEvent, context);
         verify(badMessageHandler).handleException(any(), any());
-        verifyNoInteractions(helloWorldHandler);
+        verifyNoInteractions(getLegIdFromRibbon);
 
-    }
-
-    @Test
-    void testHandleOneGoodMessageOneBadMessage() throws Exception {
-
-        when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0, sqsMessage1));
-        doCallRealMethod().doThrow(new JsonParseException(null, "foo")).when(xmlParser).apply(any());
-
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
-        undertest.handleRequest(sqsEvent, context);
-        verify(helloWorldHandler, times(1)).apply(messageCaptor.capture());
-        assertThat(messageCaptor.getAllValues().get(0).getOriginal(), is(sqsMessage0));
-
-    }
-
-    @Test
-    void testHandleOneBadMessageOneGoodMessage() throws Exception {
-
-        when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0, sqsMessage1));
-        doThrow(new JsonParseException(null, "foo")).doCallRealMethod().when(xmlParser).apply(any());
-
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
-        undertest.handleRequest(sqsEvent, context);
-        verify(helloWorldHandler, times(1)).apply(messageCaptor.capture());
-        assertThat(messageCaptor.getAllValues().get(0).getOriginal(), is(sqsMessage1));
     }
 
     @Test
@@ -135,9 +91,9 @@ class MainTest {
 
         when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
 
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
+        Main undertest = new Main(getLegIdFromRibbon, liveStreamEventParser, badMessageHandler, ispyer);
         undertest.handleRequest(sqsEvent, context);
-        verify(helloWorldHandler, times(1)).apply(messageCaptor.capture());
+        verify(getLegIdFromRibbon, times(1)).apply(messageCaptor.capture());
         final IspyContext ispyContext = messageCaptor.getValue().getPropertyAs(
                 IspyContext.class,
                 LambdaEventIspyContext.ISPY_CONTEXT_PROPERTY
@@ -151,9 +107,9 @@ class MainTest {
         when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
         when(sqsMessage0.getMessageId()).thenReturn("uuid");
 
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
+        Main undertest = new Main(getLegIdFromRibbon, liveStreamEventParser, badMessageHandler, ispyer);
         undertest.handleRequest(sqsEvent, context);
-        verify(helloWorldHandler, times(1)).apply(messageCaptor.capture());
+        verify(getLegIdFromRibbon, times(1)).apply(messageCaptor.capture());
         final IspyContext ispyContext = messageCaptor.getValue().getPropertyAs(
                 IspyContext.class,
                 LambdaEventIspyContext.ISPY_CONTEXT_PROPERTY
@@ -167,51 +123,9 @@ class MainTest {
 
         when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
 
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
+        Main undertest = new Main(getLegIdFromRibbon, liveStreamEventParser, badMessageHandler, ispyer);
         undertest.handleRequest(sqsEvent, context);
         verify(ispyer).ispy(eq("lsp-legid-setter.livestream-created.received"), eq(""), any());
      }
 
-    @Test
-    void testHandleLambdaEventOfTypeExampleSqsRequest() throws Exception {
-
-        ExampleSqsRequest exampleSqsRequest = new ExampleSqsRequest("uuid", "4");
-        when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
-        when(xmlParser.apply(any())).thenAnswer( iom -> {
-            LambdaEvent<SQSMessage> event = iom.getArgument(0);
-            return event.withBody(exampleSqsRequest);
-        });
-
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
-        undertest.handleRequest(sqsEvent, context);
-        verify(helloWorldHandler, times(1)).apply(messageCaptor.capture());
-        assertThat(messageCaptor.getAllValues().get(0).getBody(ExampleSqsRequest.class), is(exampleSqsRequest));
-
-    }
-
-    @Test
-    void testHandleSnsSourcedMessage() throws Exception {
-
-        when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
-        when(sqsMessage0.getBody()).thenReturn("{\"MessageId\": \"uuid\", \"Message\": \"sdfghjkl\"}");
-
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
-        undertest.handleRequest(sqsEvent, context);
-        verify(xmlParser).apply(messageCaptor.capture());
-        assertThat(messageCaptor.getAllValues().get(0).getBody(String.class), is("sdfghjkl"));
-
-    }
-
-    @Test
-    void testHandleSqsSourcedMessage() throws Exception {
-
-        when(sqsEvent.getRecords()).thenReturn(List.of(sqsMessage0));
-        when(sqsMessage0.getBody()).thenReturn("sdfghjkl");
-
-        Main undertest = new Main(helloWorldHandler, xmlParser, badMessageHandler, ispyer);
-        undertest.handleRequest(sqsEvent, context);
-        verify(xmlParser).apply(messageCaptor.capture());
-        assertThat(messageCaptor.getAllValues().get(0).getBody(String.class), is("sdfghjkl"));
-
-    }
 }

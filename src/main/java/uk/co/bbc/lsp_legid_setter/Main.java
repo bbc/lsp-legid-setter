@@ -22,14 +22,16 @@ import uk.co.bbc.freeman.core.LambdaEvent;
 import static uk.co.bbc.freeman.ispy.LambdaEventIspyContext.addIspyContextToEvent;
 import static uk.co.bbc.freeman.core.ExceptionHandler.addExceptionHandler;
 import static uk.co.bbc.freeman.core.ExceptionalFunction.makeSafe;
-import static uk.co.bbc.freeman.ispy.IspyContentFiller.fillIspyContent;
-
 import uk.co.bbc.freeman.ispy.SimpleIspy;
 import uk.co.bbc.ispy.Ispy;
 import uk.co.bbc.ispy.Ispyer;
 import uk.co.bbc.ispy.IspyerInstantiationException;
 import uk.co.bbc.ispy.core.IspyPreparer;
+import uk.co.bbc.lsp_legid_setter.exception.DeserialisationException;
 import uk.co.bbc.lsp_legid_setter.exception.RibbonException;
+import uk.co.bbc.lsp_legid_setter.handler.EventbridgeDetailUnwrapper;
+import uk.co.bbc.lsp_legid_setter.handler.GetLegIdFromRibbon;
+import uk.co.bbc.lsp_legid_setter.handler.LivestreamEventParser;
 import uk.co.bbc.lsp_legid_setter.ribbon.HttpClientProvider;
 import uk.co.bbc.lsp_legid_setter.ribbon.RibbonClient;
 
@@ -42,8 +44,8 @@ public class Main implements RequestHandler<SQSEvent, Void> {
     private final Environment env = new Environment();
     private final AwsClientProvider clientProvider = new AwsClientProvider(env);
 
-    private Handler<SQSMessage> xmlParser = new XmlParser();
-    private Handler<SQSMessage> helloWorldHandler;
+    private Handler<SQSMessage> liveStreamEventParser = new LivestreamEventParser();
+    private Handler<SQSMessage> getLegIdFromRibbon;
     private BadMessageHandler badMessageHandler;
     private Ispyer ispyer;
 
@@ -54,13 +56,13 @@ public class Main implements RequestHandler<SQSEvent, Void> {
     }
 
     Main(
-            Handler<SQSMessage> helloWorldHandler,
-            Handler<SQSMessage> xmlParser,
+            Handler<SQSMessage> getLegIdFromRibbon,
+            Handler<SQSMessage> liveStreamEventParser,
             BadMessageHandler badMessageHandler,
             Ispyer ispyer
     ) {
-        this.helloWorldHandler = helloWorldHandler;
-        this.xmlParser = xmlParser;
+        this.getLegIdFromRibbon = getLegIdFromRibbon;
+        this.liveStreamEventParser = liveStreamEventParser;
         this.badMessageHandler = badMessageHandler;
         this.ispyer = ispyer;
     }
@@ -72,16 +74,16 @@ public class Main implements RequestHandler<SQSEvent, Void> {
 
         event.getRecords().stream()
                 .map(LambdaEvent::new)
-                .map(addExceptionHandler(badMessageHandler, JsonParseException.class))
+                .map(addExceptionHandler(badMessageHandler, JsonParseException.class, DeserialisationException.class))
                 .map(addExceptionHandler(new IspyingExceptionHandler<>(), RibbonException.class))
                 .map(addIspyContextToEvent(ispyer, ISPY_EVENT_PREFIX))
                 .map(makeSafe(new MessageIdReceived(new SnsJsonExtractor())))
                 .map(makeSafe(new SnsJsonUnwrapper(new SnsJsonExtractor())))
-                .map(makeSafe(xmlParser))
+                .map(makeSafe(new EventbridgeDetailUnwrapper()))
+                .map(makeSafe(liveStreamEventParser))
                 .filter(LambdaEvent::isNotException) // Don't try to do any more processing of jobs that have already failed.
-                .map(fillIspyContent())
                 .map(new SimpleIspy<>("livestream-created.received"))
-                .map(makeSafe(helloWorldHandler))
+                .map(makeSafe(getLegIdFromRibbon))
                 .filter(LambdaEvent::isNotException)
                 .forEach(new SimpleIspy<SQSMessage>("info.message.sent").toConsumer());
 
@@ -98,17 +100,17 @@ public class Main implements RequestHandler<SQSEvent, Void> {
      * @param context
      */
     private void initialiseOnFirstCall(Context context) {
-        if (ispyer == null || helloWorldHandler == null || badMessageHandler == null) {
+        if (ispyer == null || getLegIdFromRibbon == null || badMessageHandler == null) {
             IspyPreparer preparer = new IspyPreparer(new StaticParams(context).getIspyMapSupplier());
             try {
                 ispyer = Ispy.newIspyer(env.getIspyTopicArn(), clientProvider.provideSnsClient(), preparer);
             } catch (IspyerInstantiationException ex) {
                 throw new RuntimeException("Failed to create ispyer", ex);
             }
-            helloWorldHandler = new SqsLambdaHelloWorld();
 
             badMessageHandler = new BadMessageHandler(clientProvider.provideSqsClient(), env.getBadMessageQueueUrl(), COMPONENT_NAME);
-            new RibbonClient(new HttpClientProvider(env.getEnvironmentName()).provide(), env.getRibbonUrl());
+            RibbonClient ribbonClient = new RibbonClient(new HttpClientProvider(env.getEnvironmentName()).provide(), env.getRibbonUrl());
+            getLegIdFromRibbon = new GetLegIdFromRibbon(ribbonClient);
         }
     }
 

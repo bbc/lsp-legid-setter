@@ -1,0 +1,27 @@
+{
+  "header": {
+    "deelVersion": "2-0-0",
+    "correlationID": "correlation_id",
+    "sourceMessageID": "96cecf74-7f23-4205-a063-c6ca866123ea",
+    "eventTimestamp": "2020-06-01T13:36:35.955908Z",
+    "origin": "lsp-medialive-enricher",
+    "messageType": "STATUS",
+    "primaryEntityID": "urn:bbc:pips:pid:cvid"
+  },
+  "messageContext": {
+    "domain": "bbc.content.distribution",
+    "function": "liveEncode",
+    "statement": "livestreamCreated",
+    "contentTypes": [
+      "MEDIA"
+    ]
+  },
+  "data": {
+    "entityDescription": {},
+    "payload": {
+      "id": "urn:bbc:pips:pid:cvid",
+      "event": "LIVESTREAM_CREATED",
+      "encoderTimestamp": "2020-01-01T09:00:00Z"
+    }
+  }
+}
