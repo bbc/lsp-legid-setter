@@ -9,6 +9,7 @@ import uk.co.bbc.lsp_legid_setter.ribbon.RibbonClient;
 import uk.co.bbc.lsp_medialive.domain.LivestreamEvent;
 
 public class GetLegIdFromRibbon implements Handler<SQSEvent.SQSMessage>{
+    public static final String LEG_ID = "LEG_ID";
     private final RibbonClient ribbonClient;
     
     public GetLegIdFromRibbon(RibbonClient ribbonClient) {
@@ -20,6 +21,6 @@ public class GetLegIdFromRibbon implements Handler<SQSEvent.SQSMessage>{
         LivestreamEvent livestreamEvent = event.getBody(LivestreamEvent.class);
         String cvid = livestreamEvent.getId();
         String legId = ribbonClient.getLegId(cvid);
-        return event.withBody(legId);
+        return event.withProperty(LEG_ID, legId);
     }
 }

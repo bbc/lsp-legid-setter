@@ -12,7 +12,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import uk.co.bbc.freeman.core.LambdaEvent;
 import uk.co.bbc.lsp_legid_setter.exception.DeserialisationException;
 
-public class EventbridgeDetailUnwrapperTest {
+class EventbridgeDetailUnwrapperTest {
 
     private EventbridgeDetailUnwrapper underTest;
 

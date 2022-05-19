@@ -2,6 +2,8 @@ package uk.co.bbc.lsp_legid_setter;
 
 import uk.co.bbc.freeman.ispy.IspyingExceptionHandler;
 import uk.co.bbc.freeman.aws.BadMessageHandler;
+
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
@@ -22,18 +24,23 @@ import uk.co.bbc.freeman.core.LambdaEvent;
 import static uk.co.bbc.freeman.ispy.LambdaEventIspyContext.addIspyContextToEvent;
 import static uk.co.bbc.freeman.core.ExceptionHandler.addExceptionHandler;
 import static uk.co.bbc.freeman.core.ExceptionalFunction.makeSafe;
+import static uk.co.bbc.freeman.core.WhenThen.when;
+import static java.util.function.Predicate.not;
 import uk.co.bbc.freeman.ispy.SimpleIspy;
 import uk.co.bbc.ispy.Ispy;
 import uk.co.bbc.ispy.Ispyer;
 import uk.co.bbc.ispy.IspyerInstantiationException;
 import uk.co.bbc.ispy.core.IspyPreparer;
 import uk.co.bbc.lsp_legid_setter.exception.DeserialisationException;
-import uk.co.bbc.lsp_legid_setter.exception.RibbonException;
 import uk.co.bbc.lsp_legid_setter.handler.EventbridgeDetailUnwrapper;
 import uk.co.bbc.lsp_legid_setter.handler.GetLegIdFromRibbon;
 import uk.co.bbc.lsp_legid_setter.handler.LivestreamEventParser;
+import uk.co.bbc.lsp_legid_setter.handler.SwitchLeg;
+import uk.co.bbc.lsp_legid_setter.predicator.LegIdIsNotSet;
 import uk.co.bbc.lsp_legid_setter.ribbon.HttpClientProvider;
 import uk.co.bbc.lsp_legid_setter.ribbon.RibbonClient;
+import uk.co.bbc.lsp_medialive.restclient.stateapi.LspMedialiveStateClient;
+import uk.co.bbc.lsp_medialive.restclient.stateapi.SigningAmazonWebServiceClient;
 
 public class Main implements RequestHandler<SQSEvent, Void> {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
@@ -46,6 +53,8 @@ public class Main implements RequestHandler<SQSEvent, Void> {
 
     private Handler<SQSMessage> liveStreamEventParser = new LivestreamEventParser();
     private Handler<SQSMessage> getLegIdFromRibbon;
+    private LegIdIsNotSet legIdIsNotSet;
+    private Handler<SQSMessage> switchLeg;
     private BadMessageHandler badMessageHandler;
     private Ispyer ispyer;
 
@@ -58,11 +67,15 @@ public class Main implements RequestHandler<SQSEvent, Void> {
     Main(
             Handler<SQSMessage> getLegIdFromRibbon,
             Handler<SQSMessage> liveStreamEventParser,
+            LegIdIsNotSet legIdIsNotSet,
+            Handler<SQSMessage> switchLeg,
             BadMessageHandler badMessageHandler,
             Ispyer ispyer
     ) {
         this.getLegIdFromRibbon = getLegIdFromRibbon;
         this.liveStreamEventParser = liveStreamEventParser;
+        this.legIdIsNotSet = legIdIsNotSet;
+        this.switchLeg = switchLeg;
         this.badMessageHandler = badMessageHandler;
         this.ispyer = ispyer;
     }
@@ -75,7 +88,7 @@ public class Main implements RequestHandler<SQSEvent, Void> {
         event.getRecords().stream()
                 .map(LambdaEvent::new)
                 .map(addExceptionHandler(badMessageHandler, JsonParseException.class, DeserialisationException.class))
-                .map(addExceptionHandler(new IspyingExceptionHandler<>(), RibbonException.class))
+                .map(addExceptionHandler(new IspyingExceptionHandler<>()))
                 .map(addIspyContextToEvent(ispyer, ISPY_EVENT_PREFIX))
                 .map(makeSafe(new MessageIdReceived(new SnsJsonExtractor())))
                 .map(makeSafe(new SnsJsonUnwrapper(new SnsJsonExtractor())))
@@ -84,8 +97,13 @@ public class Main implements RequestHandler<SQSEvent, Void> {
                 .filter(LambdaEvent::isNotException) // Don't try to do any more processing of jobs that have already failed.
                 .map(new SimpleIspy<>("livestream-created.received"))
                 .map(makeSafe(getLegIdFromRibbon))
+                .map(when(legIdIsNotSet)
+                        .then(makeSafe(switchLeg))
+                        .then(new SimpleIspy<SQSMessage>("ribbon.set"))
+                        .end())
                 .filter(LambdaEvent::isNotException)
-                .forEach(new SimpleIspy<SQSMessage>("info.message.sent").toConsumer());
+                .filter(not(legIdIsNotSet))
+                .forEach(new SimpleIspy<SQSMessage>("ribbon.ignored").toConsumer());
 
         return null;
     }
@@ -100,7 +118,7 @@ public class Main implements RequestHandler<SQSEvent, Void> {
      * @param context
      */
     private void initialiseOnFirstCall(Context context) {
-        if (ispyer == null || getLegIdFromRibbon == null || badMessageHandler == null) {
+        if (ispyer == null || getLegIdFromRibbon == null || badMessageHandler == null || switchLeg == null) {
             IspyPreparer preparer = new IspyPreparer(new StaticParams(context).getIspyMapSupplier());
             try {
                 ispyer = Ispy.newIspyer(env.getIspyTopicArn(), clientProvider.provideSnsClient(), preparer);
@@ -111,6 +129,16 @@ public class Main implements RequestHandler<SQSEvent, Void> {
             badMessageHandler = new BadMessageHandler(clientProvider.provideSqsClient(), env.getBadMessageQueueUrl(), COMPONENT_NAME);
             RibbonClient ribbonClient = new RibbonClient(new HttpClientProvider(env.getEnvironmentName()).provide(), env.getRibbonUrl());
             getLegIdFromRibbon = new GetLegIdFromRibbon(ribbonClient);
+            legIdIsNotSet = new LegIdIsNotSet();
+            SigningAmazonWebServiceClient stateAPIClient = new SigningAmazonWebServiceClient(new DefaultAWSCredentialsProviderChain());
+            LspMedialiveStateClient lspMedialiveStateClient = new LspMedialiveStateClient(
+                    "",
+                    env.getStateApiChannelsEndpoint(),
+                    "",
+                    "",
+                    "",
+                    stateAPIClient);
+            switchLeg = new SwitchLeg(ribbonClient, lspMedialiveStateClient);
         }
     }
 

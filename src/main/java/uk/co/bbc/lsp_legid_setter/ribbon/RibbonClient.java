@@ -2,13 +2,14 @@ package uk.co.bbc.lsp_legid_setter.ribbon;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import uk.co.bbc.lsp_legid_setter.exception.RibbonException;
 
 import java.io.IOException;
@@ -44,6 +45,25 @@ public class RibbonClient {
                 return null;
             }
             throw new RibbonException(String.format("Unexpected [%s], [%s]", status, body));
+        }
+    }
+    
+    public void setLegId(String cvid, String legId) throws IOException {
+        String completeUrl = String.format(ribbonBaseUrl, cvid);
+        LOG.info("Making Put request to: {}", completeUrl);
+        HttpPut httpPut = new HttpPut(completeUrl);
+        httpPut.setHeader("Content-type", "application/json");
+        Map<String, String> content = Map.of("leg", legId);
+        StringEntity stringEntity = new StringEntity(objectMapper.writeValueAsString(content));
+        httpPut.setEntity(stringEntity);
+        try (CloseableHttpResponse response = httpClient.execute(httpPut)) {
+            int status = response.getStatusLine().getStatusCode();
+            LOG.info("Status: {}", status);
+            if (status != 200) {
+                String body = EntityUtils.toString(response.getEntity(), "UTF-8");
+                LOG.info("Response body: {}", body);
+                throw new RibbonException(String.format("Unexpected [%s], [%s]", status, body));
+            }
         }
     }
 }

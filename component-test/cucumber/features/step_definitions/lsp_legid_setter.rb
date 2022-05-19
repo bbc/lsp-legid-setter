@@ -63,7 +63,7 @@ When('a Livestream Created message is sent to the queue') do
 end
 
 Given('Ribbon Get leg endpoint will respond with {int}') do |status|
-  if status == "200"
+  if status == 200
     content = '{"leg":"legId"}'
   else
     content = "#{status} body"
@@ -76,8 +76,17 @@ Given('Ribbon Get leg endpoint will respond with {int}') do |status|
   )
 end
 
+Given('Ribbon Put leg endpoint will respond with {int}') do |status|
+  @ribbon_put_leg_double = RestAssured::Double.create(
+    fullpath: '/packager/pips-pid-1234/leg',
+    verb: 'PUT',
+    status: status,
+    content: "#{status} body"
+  )
+end
+
 Given('medialive state api Get channels endpoint will respond with {int}') do |status|
-  if status == "200"
+  if status == 200
     content = {
       "channel_arn" => "Arn",
       "state" => "CREATING",
@@ -96,7 +105,7 @@ Given('medialive state api Get channels endpoint will respond with {int}') do |s
     fullpath: '/channels?cvid=pips-pid-1234',
     verb: 'GET',
     status: status,
-    content: JSON.generate(content)
+    content: JSON.generate([content])
   )
 end
 
@@ -139,6 +148,10 @@ end
 
 Given('Ribbon Get leg endpoint is called') do
   @ribbon_get_leg_double.wait_for_requests(1)
+end
+
+Given('Ribbon Put leg endpoint is called') do
+  @ribbon_put_leg_double.wait_for_requests(1)
 end
 
 Given('medialive state api Get channels endpoint is called') do

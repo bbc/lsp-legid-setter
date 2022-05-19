@@ -35,6 +35,7 @@ class GetLegIdFromRibbonTest {
         LambdaEvent<SQSMessage> event = new LambdaEvent<>(new SQSEvent.SQSMessage())
                 .withBody(livestreamEvent);
         LambdaEvent<SQSMessage> apply = underTest.apply(event);
-        assertEquals("legid", apply.getBody(String.class));
+        assertEquals("legid", apply.getPropertyAs(String.class, "LEG_ID"));
+        assertEquals(livestreamEvent, apply.getBody(LivestreamEvent.class));
     }
 }

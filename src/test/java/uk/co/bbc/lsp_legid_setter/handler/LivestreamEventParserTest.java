@@ -27,7 +27,7 @@ import uk.co.bbc.lsp_medialive.domain.LivestreamEvent;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class LivestreamEventParserTest {
+class LivestreamEventParserTest {
 
     @Mock
     private LambdaEvent<SQSEvent.SQSMessage> lambdaEvent;
