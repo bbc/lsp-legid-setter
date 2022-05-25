@@ -2,11 +2,11 @@
 
 from mediaservices_troposphere.base_template import BaseTemplateBuilder
 from mediaservices_troposphere.ispy import IspyTopicResourceBuilder
-from mediaservices_troposphere.queue import QueuePatternResourceBuilder, QueueResourceBuilder
-from mediaservices_troposphere.topic import TopicResourceBuilder
+from mediaservices_troposphere.queue import QueuePatternResourceBuilder, QueueResourceBuilder, QueueResourcePolicyBuilder
+from troposphere import Ref
 
 if __name__ == '__main__':
-    RUNBOOK = 'https://confluence.dev.bbc.co.uk/pages/display/modav/'  # TODO RUNBOOK
+    RUNBOOK = 'https://confluence.dev.bbc.co.uk/display/modav/Video+Factoryi+-+LSP+Legid+Setter+Run+Book'  # TODO RUNBOOK
     COMPONENT_NAME = 'LspLegidSetter'
     PROJECT_NAME = 'lsp-legid-setter'
 
@@ -18,10 +18,13 @@ if __name__ == '__main__':
         .with_visibility_timeout(60) \
         .add_to_template(t)
 
+    QueueResourcePolicyBuilder("EventsQueuePolicy",
+        [Ref("Queue")],
+        "events.amazonaws.com",
+        principal_type="Service") \
+        .add_to_template(t)
+
     # ispy topic
     IspyTopicResourceBuilder().add_to_template(t)
-
-    # output topic
-    TopicResourceBuilder("Output").add_to_template(t)
 
     print(t.to_json())

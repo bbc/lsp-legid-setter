@@ -7,24 +7,32 @@ from mediaservices_troposphere.lambda_template import LambdaTemplateBuilder
 from mediaservices_troposphere.output import StackNameEnvImportValue
 from mediaservices_troposphere.policy import PolicyBuilder
 from mediaservices_troposphere.queue import QueuePatternPolicyBuilder
-from troposphere import Join
+from troposphere import Join, Parameter, Ref
 from troposphere.awslambda import Code
 
 if __name__ == '__main__':
 
     COMPONENT_NAME = 'LspLegidSetter'
     PROJECT_NAME = 'lsp-legid-setter'
-    RUNBOOK = 'https://confluence.dev.bbc.co.uk/display/modav/Video+Factory+ExampleLambda+Run+Book' # TODO
+    RUNBOOK = 'https://confluence.dev.bbc.co.uk/display/modav/Video+Factoryi+-+LSP+Legid+Setter+Run+Book' # TODO
 
     RESOURCES_STACK = 'Modav' + COMPONENT_NAME + 'Resources'
     SHARED_RESOURCES_STACK = 'ModavSharedResources'
+    STATE_API_STACK = 'ModavMediaLiveStateAPI'
+    ENV = component_config.get(component_config.ENV)
 
-    output_topic_arn = StackNameEnvImportValue(RESOURCES_STACK, 'OutputTopicArn')
+    ribbon_url = Parameter(
+        "RibbonUrl",
+        Type="String",
+        Description="The URL used to reach Ribbon",
+        Default="https://ribbon.%sapi.bbci.co.uk" % (ENV.lower() + "." if ENV != "live" else "")
+    )
 
     environment_variables = {
         'BAD_MESSAGE_QUEUE_URL': StackNameEnvImportValue(RESOURCES_STACK, 'BadMessageQueueUrl'),
         'ISPY_TOPIC_ARN': StackNameEnvImportValue(RESOURCES_STACK, 'IspyTopicArn'),
-        'OUTPUT_TOPIC_ARN': output_topic_arn,
+        'RIBBON_URL': Ref(ribbon_url),
+        'STATE_API_CHANNELS_ENDPOINT': StackNameEnvImportValue(STATE_API_STACK, 'ChannelsEndpoint')
     }
 
     dead_letter_queue_arn = StackNameEnvImportValue(RESOURCES_STACK, 'DeadLetterQueueArn')
@@ -61,11 +69,7 @@ if __name__ == '__main__':
     lambda_builder.with_logging_retention_policy(90)
     t = lambda_builder.build()
 
-    # we need to write to output topic
-    PolicyBuilder("SnsOutputTopicPolicy",
-                  SNSActions.publish,
-                  [output_topic_arn]
-                  ).add_to_template(t)
+    t.add_parameter(ribbon_url)
 
     queue_policy.add_to_template(t)
     IspyPolicyBuilder(RESOURCES_STACK).add_to_template(t)
