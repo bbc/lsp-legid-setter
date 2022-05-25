@@ -14,7 +14,6 @@ public class Environment {
 
     private static final String AWS_REGION = "AWS_REGION";
     private static final String BAD_MESSAGE_QUEUE_URL_NAME = "BAD_MESSAGE_QUEUE_URL";
-    private static final String FAIL_MESSAGE_QUEUE_URL_NAME = "FAIL_MESSAGE_QUEUE_URL";
     private static final String ENVIRONMENT = "ENVIRONMENT";
     private static final String ISPY_TOPIC_ARN_NAME = "ISPY_TOPIC_ARN";
     private static final String RIBBON_URL = "RIBBON_URL";
@@ -28,10 +27,6 @@ public class Environment {
 
     public String getBadMessageQueueUrl() {
         return get(BAD_MESSAGE_QUEUE_URL_NAME);
-    }
-
-    public String getFailMessageQueueUrl() {
-        return get(FAIL_MESSAGE_QUEUE_URL_NAME);
     }
 
     public String getEnvironmentName() {
