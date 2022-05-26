@@ -5,4 +5,4 @@ export SERVER_ENV="component-test"
 cd "$( dirname "$0" )"
 
 bundle exec cucumber "$@"
-#bundle exec rubocop Gemfile features
+bundle exec rubocop Gemfile features

@@ -9,10 +9,9 @@ require 'rest-assured'
 require 'rest-client'
 require 'mod_av_cucumber_env'
 
-AfterConfiguration do
-
+BeforeAll do
   QUEUES = {
-    BMQ: "#{CLOUD_ID}-lsp-legid-setter-BMQ",
+    BMQ: "#{CLOUD_ID}-lsp-legid-setter-BMQ"
   }.freeze
 
   SQS = ModavCucumber::SqsHelper.create_helper_with_queues(Aws::SQS::Client.new, QUEUES, check_all_empty: true)
@@ -36,7 +35,7 @@ AfterConfiguration do
     env: {
       'BAD_MESSAGE_QUEUE_URL' => SQS.urls[:BMQ],
       'RIBBON_URL' => 'http://127.0.0.1:5432',
-      'ENVIRONMENT' => 'Dev',
+      'ENVIRONMENT' => 'cucumber',
       'STATE_API_CHANNELS_ENDPOINT' => 'http://127.0.0.1:5432/channels'
     }
   )
@@ -45,6 +44,5 @@ AfterConfiguration do
 end
 
 Before do
-  fixtures_dir = File.expand_path('../../fixtures', File.dirname(__FILE__))
   RestClient.delete "#{RestAssured::Server.address}/doubles/all"
 end

@@ -63,11 +63,11 @@ When('a Livestream Created message is sent to the queue') do
 end
 
 Given('Ribbon Get leg endpoint will respond with {int}') do |status|
-  if status == 200
-    content = '{"leg":"legId"}'
-  else
-    content = "#{status} body"
-  end
+  content = if status == 200
+              '{"leg":"legId"}'
+            else
+              "#{status} body"
+            end
   @ribbon_get_leg_double = RestAssured::Double.create(
     fullpath: '/packager/pips-pid-1234/leg',
     verb: 'GET',
@@ -85,22 +85,22 @@ Given('Ribbon Put leg endpoint will respond with {int}') do |status|
   )
 end
 
-Given('medialive state api Get channels endpoint will respond with {int}') do |status|
-  if status == 200
-    content = {
-      "channel_arn" => "Arn",
-      "state" => "CREATING",
-      "cvid" => "pips-pid-1234",
-      "active_input" => "activeInput",
-      "target_input" => "targetInput",
-      "slate_input_name" => "slateInputName",
-      "leg_id" => "legId",
-      "created_timestamp" => "1578572375000",
-      "last_update_timestamp" => "1578572375257"
-    }
-  else
-    content = {}
-  end
+Given('Medialive State Api Get channels endpoint will respond with {int}') do |status|
+  content = if status == 200
+              {
+                'channel_arn' => 'Arn',
+                'state' => 'CREATING',
+                'cvid' => 'pips-pid-1234',
+                'active_input' => 'activeInput',
+                'target_input' => 'targetInput',
+                'slate_input_name' => 'slateInputName',
+                'leg_id' => 'legId',
+                'created_timestamp' => '1578572375000',
+                'last_update_timestamp' => '1578572375257'
+              }
+            else
+              {}
+            end
   @state_get_channel_double = RestAssured::Double.create(
     fullpath: '/channels?cvid=pips-pid-1234',
     verb: 'GET',
@@ -154,6 +154,6 @@ Given('Ribbon Put leg endpoint is called') do
   @ribbon_put_leg_double.wait_for_requests(1)
 end
 
-Given('medialive state api Get channels endpoint is called') do
+Given('Medialive State Api Get channels endpoint is called') do
   @state_get_channel_double.wait_for_requests(1)
 end

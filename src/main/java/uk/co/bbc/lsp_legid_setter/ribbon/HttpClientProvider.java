@@ -33,7 +33,7 @@ public class HttpClientProvider {
     }
 
     public CloseableHttpClient provide() {
-        if ("Dev".equals(environmentName)) {
+        if ("cucumber".equals(environmentName)) {
             LOG.info("Using default HTTP client for environment [{}]", environmentName);
             return HttpClients.createDefault();
         } else {

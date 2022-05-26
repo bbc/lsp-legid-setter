@@ -1,0 +1,8 @@
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+
+Metrics/BlockLength:
+  Max: 100
+
+AllCops:
+  NewCops: enable
