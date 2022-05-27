@@ -19,7 +19,7 @@
         <mockito.version>3.2.4</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <junit.version>5.5.2</junit.version>
-        <jackson.version>2.9.9</jackson.version>
+        <jackson.version>2.12.6.1</jackson.version>
         <freeman.version>1.4.0</freeman.version>
         <ispyjava.version>3.0.2</ispyjava.version>
         <httpclient.version>4.5.13</httpclient.version>
