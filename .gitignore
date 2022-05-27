@@ -45,3 +45,4 @@ venv/
 # Component tests
 build.zip
 test-classes.zip
+/bin/

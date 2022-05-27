@@ -7,5 +7,5 @@ BASE_DIR="$( dirname "$0" )"
 # 2>&1 because that makes life much easier in under-test.rb
 exec 2>&1
 
-jar="$( echo "$BASE_DIR"/target/sqs-lambda-helloworld-*-fat-tests.jar )"
+jar="$( echo "$BASE_DIR"/target/lsp-legid-setter-*-fat-tests.jar )"
 exec java -jar "$jar" "$@"

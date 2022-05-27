@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pycodestyle = "*"
+pyflakes = "*"
+
+[packages]
+awacs = "==2.0.2"
+troposphere = "==3.1.0"
+cosmosTroposphere = {git = "ssh://git@github.com/bbc/cosmos-troposphere.git",ref = "v4.0.0",editable = true}
+mediaservices-troposphere = {git = "ssh://git@github.com/bbc/mediaservices-troposphere.git",ref = "8.17.0",editable = true}
+
+[requires]
+python_version = "3"

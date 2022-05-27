@@ -5,22 +5,13 @@ require 'aws-helper-v2/s3'
 require 'erubis'
 require 'ispy'
 require 'json'
+require 'rest-assured'
 require 'rest-client'
 require 'mod_av_cucumber_env'
 
-AfterConfiguration do
-  # create test topic and test queue
-  # (can't use create_and_track_topic as we need topic arn)
-  OUTPUT_TOPIC_ARN = AwsHelperV2SNS.create_topic(OUTPUT_TOPIC_NAME)
-  OUTPUT_QUEUE_ARN, OUTPUT_QUEUE_URL = AwsHelperV2SNS.create_tracking_queue(OUTPUT_TOPIC_NAME, OUTPUT_TOPIC_ARN)
-  AwsHelperV2SNS.create_raw_subscription(OUTPUT_TOPIC_ARN, OUTPUT_QUEUE_ARN)
-  puts "OutputTopicArn: #{OUTPUT_TOPIC_ARN}"
-  puts "OutputQueueUrl: #{OUTPUT_QUEUE_URL}"
-
+BeforeAll do
   QUEUES = {
-    OUT: OUTPUT_QUEUE_URL.split('/').last,
-    BMQ: "#{CLOUD_ID}-sqslambdahelloworld-BMQ",
-    FMQ: "#{CLOUD_ID}-sqslambdahelloworld-FMQ"
+    BMQ: "#{CLOUD_ID}-lsp-legid-setter-BMQ"
   }.freeze
 
   SQS = ModavCucumber::SqsHelper.create_helper_with_queues(Aws::SQS::Client.new, QUEUES, check_all_empty: true)
@@ -43,15 +34,15 @@ AfterConfiguration do
     print_lines: true,
     env: {
       'BAD_MESSAGE_QUEUE_URL' => SQS.urls[:BMQ],
-      'FAIL_MESSAGE_QUEUE_URL' => SQS.urls[:FMQ],
-      'OUTPUT_TOPIC_ARN' => OUTPUT_TOPIC_ARN
+      'RIBBON_URL' => 'http://127.0.0.1:5432',
+      'ENVIRONMENT' => 'cucumber',
+      'STATE_API_CHANNELS_ENDPOINT' => 'http://127.0.0.1:5432/channels'
     }
   )
   BASE_URL = under_test.base_url
+  RestAssured::Server.start(database: ':memory:', port: 5432)
 end
 
 Before do
-  fixtures_dir = File.expand_path('../../fixtures', File.dirname(__FILE__))
-  hello_world_filename = 'sqs-lambda-hello-world.json'
-  AwsHelperV2::S3.upload_file(S3_BUCKET, "#{JUST_CONFIG_PREFIX}/#{hello_world_filename}", "#{fixtures_dir}/#{hello_world_filename}")
+  RestClient.delete "#{RestAssured::Server.address}/doubles/all"
 end

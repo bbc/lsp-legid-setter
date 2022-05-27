@@ -1,17 +1,15 @@
 # Component Name
 
-An SQS-driven lambda. This generic project is purposefully designed for new Lambda components to be produced (generated in GitHub) from sqs-lambda-hello-world.
+An SQS-driven lambda to set the legid via the Ribbon API.
 
 ## Inputs
 
-An sqs message (possibly containing multiple events)
-- a just-configuration json file 
+An sqs message from event bridge
 - environment variables (defined as part of the stack)
 
 ## Outputs 
 - aws log comments
 - ispy messages
-- sns message written to topic
 
 ## Build
 
@@ -19,32 +17,9 @@ An sqs message (possibly containing multiple events)
 ./build
 ```
 
-(The slight hello-world / helloworld naming confusion is due to registering the project as a cosmos service before realising it should be a cosmos lambda. I've renamed all the build and packaging aspects to use the newer helloworld, but the github repo and actual source is still hello-world)
-
 ## Deploying
 
 Use Jenkins to build and deploy to INT, promote to TEST and LIVE via cosmos console.
-
-HOWEVER, when deploying FOR THE FIRST TIME it will use a zip file containing a dummy Lambda.
-You must deploy a proper release via Jenkins / Cosmos before using this stack.
-
-### Deploying Manually (Don't do this)
-
-
-The Makefile defines a deploy-int target which copies the test just-config file and uploads the build.zip file. 
-it also prints the S3 path (useful if updating the lambda via lambda console, see below)
-and the CODE\_KEY (which you'll need when deploying the component stack)
-
-go to amazon console, lambda, choose the correct lambda.
-
-in "Function Code" box
-choose "Upload a File from Amazon S3"
-in the "S3 Link URL" box enter the S3 path printed by the make deploy-int stage
-press "Save" at the top
-
-create an alias if required (Jenkins / Cosmos does this)
-
-now you can use ./sendMessage.sh to send the lambda a message (but make sure the queue is correct beforehand)
 
 ## Stacks
 
@@ -59,9 +34,9 @@ you can use `clean-modav-spud`, if you want to :)
 
 ## Diagnostics
 
-splunk events start with "sqs-lambda-hello-world"
+splunk events start with "lsp-legid-setter"
 
-logs are on the "Monitoring" tab of the lambda page or in "Cloud Watch - Log Groups" (filter "/aws/lambda/IntModavSqsLambdaHello")
+logs are on the "Monitoring" tab of the lambda page or in "Cloud Watch - Log Groups" (filter "/aws/lambda/IntModavLspLegidSetter")
 
 it's easiest to find the log you want from the splunk message which contains the log stream and the aws request id
 (if searching for the request id use only the first 8 characters because the hyphens confuse it)

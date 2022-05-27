@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "lsp-legid-setter"
+version = "1.0.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.7"
+troposphere = "^3.1.1"
+awacs = "^2.0.2"
+cosmosTroposphere = {git = "ssh://git@github.com/bbc/cosmos-troposphere.git", tag = "v4.0.0" }
+mediaservices-troposphere = { git = "ssh://git@github.com/bbc/mediaservices-troposphere.git", tag = "8.18.0" }
+requests = "^2.26.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

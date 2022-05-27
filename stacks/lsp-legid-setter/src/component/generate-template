@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+from cosmosTroposphere.actions import SNSActions
+from mediaservices_troposphere import component_config
+from mediaservices_troposphere.ispy import IspyPolicyBuilder
+from mediaservices_troposphere.lambda_template import LambdaTemplateBuilder
+from mediaservices_troposphere.output import StackNameEnvImportValue
+from mediaservices_troposphere.policy import PolicyBuilder
+from mediaservices_troposphere.queue import QueuePatternPolicyBuilder
+from troposphere import Join, Parameter, Ref
+from troposphere.awslambda import Code
+
+if __name__ == '__main__':
+
+    COMPONENT_NAME = 'LspLegidSetter'
+    PROJECT_NAME = 'lsp-legid-setter'
+    RUNBOOK = 'https://confluence.dev.bbc.co.uk/display/modav/Video+Factoryi+-+LSP+Legid+Setter+Run+Book' # TODO
+
+    RESOURCES_STACK = 'Modav' + COMPONENT_NAME + 'Resources'
+    SHARED_RESOURCES_STACK = 'ModavSharedResources'
+    STATE_API_STACK = 'ModavMediaLiveStateAPI'
+    ENV = component_config.get(component_config.ENV)
+
+    ribbon_url = Parameter(
+        "RibbonUrl",
+        Type="String",
+        Description="The URL used to reach Ribbon",
+        Default="https://ribbon.%sapi.bbci.co.uk" % (ENV.lower() + "." if ENV != "live" else "")
+    )
+
+    environment_variables = {
+        'BAD_MESSAGE_QUEUE_URL': StackNameEnvImportValue(RESOURCES_STACK, 'BadMessageQueueUrl'),
+        'ISPY_TOPIC_ARN': StackNameEnvImportValue(RESOURCES_STACK, 'IspyTopicArn'),
+        'RIBBON_URL': Ref(ribbon_url),
+        'STATE_API_CHANNELS_ENDPOINT': StackNameEnvImportValue(STATE_API_STACK, 'ChannelsEndpoint')
+    }
+
+    dead_letter_queue_arn = StackNameEnvImportValue(RESOURCES_STACK, 'DeadLetterQueueArn')
+
+    queue_policy = QueuePatternPolicyBuilder(RESOURCES_STACK)
+
+    lambda_builder = LambdaTemplateBuilder(
+        COMPONENT_NAME,
+        'modav',
+        Code(
+            # dummy code zip required for first deployment
+            S3Bucket=StackNameEnvImportValue(SHARED_RESOURCES_STACK, 'ConfigurationBucketName'),
+            S3Key='lambda/noop.node.zip'
+        ),
+        'uk.co.bbc.lsp_legid_setter.Main',
+        'java11',
+        memory_size=1024,
+        timeout=60,
+        template_description='Lsp Legid Setter') \
+        .with_alias(component_config.get(component_config.ENV)) \
+        .with_environment_variables(environment_variables) \
+        .with_error_alarm(3, RUNBOOK, period_in_seconds=20 * 60) \
+        .with_event_source_mapping(
+            StackNameEnvImportValue(RESOURCES_STACK, 'QueueArn'),
+            queue_policy.resources[PolicyBuilder.POLICY],
+            {'BatchSize': 1}
+    ) \
+        .with_invoke_permission(
+            'SQSInvokePermission',
+            'sqs.amazonaws.com',
+            StackNameEnvImportValue(RESOURCES_STACK, 'QueueArn')
+    )
+
+    lambda_builder.with_logging_retention_policy(90)
+    t = lambda_builder.build()
+
+    t.add_parameter(ribbon_url)
+
+    queue_policy.add_to_template(t)
+    IspyPolicyBuilder(RESOURCES_STACK).add_to_template(t)
+
+    print(t.to_json())

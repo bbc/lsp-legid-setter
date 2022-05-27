@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
-source 'https://gems.cloud.bbc.co.uk' do
-  gem 'aws-helper-v2', '>= 7.5'
-  gem 'ispy', '>= 12'
-  gem 'mod_av_cucumber'
-end
+source 'https://gems.cloud.bbc.co.uk'
+gem 'aws-helper-v2', '>= 7.5'
+gem 'ispy', '>= 12'
+gem 'mod_av_cucumber'
 
 source 'https://rubygems.org' do
   gem 'erubis'
+  gem 'rest-assured'
   gem 'rest-client'
+  gem 'sqlite3'
 
   group :local do
     gem 'pry'
