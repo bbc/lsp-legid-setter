@@ -85,8 +85,6 @@ class MainTest {
         verify(ispyer).ispy(eq("lsp-legid-setter.livestream-created.received"), any(), any());
         verify(getLegIdFromRibbon).apply(any());
         verify(switchLeg).apply(any());
-        
-        verify(ispyer).ispy(eq("lsp-legid-setter.ribbon.set"), any(), any());
     }
     
     @Test

@@ -85,7 +85,7 @@ Given('Ribbon Put leg endpoint will respond with {int}') do |status|
   )
 end
 
-Given('Medialive State Api Get channels endpoint will respond with {int}') do |status|
+Given('Medialive State Api Get channels endpoint will respond with {int} and leg id {string}') do |status, legid|
   content = if status == 200
               {
                 'channel_arn' => 'Arn',
@@ -94,7 +94,7 @@ Given('Medialive State Api Get channels endpoint will respond with {int}') do |s
                 'active_input' => 'activeInput',
                 'target_input' => 'targetInput',
                 'slate_input_name' => 'slateInputName',
-                'leg_id' => 'legId',
+                'leg_id' => legid,
                 'created_timestamp' => '1578572375000',
                 'last_update_timestamp' => '1578572375257'
               }
