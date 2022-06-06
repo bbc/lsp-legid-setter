@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 source 'https://gems.cloud.bbc.co.uk'
-gem 'aws-helper-v2', '>= 7.5'
-gem 'ispy', '>= 12'
+gem 'aws-helper-v2'
+gem 'ispy'
 gem 'mod_av_cucumber'
 
 source 'https://rubygems.org' do
