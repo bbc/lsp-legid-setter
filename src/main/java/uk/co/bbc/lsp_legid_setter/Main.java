@@ -99,7 +99,6 @@ public class Main implements RequestHandler<SQSEvent, Void> {
                 .map(makeSafe(getLegIdFromRibbon))
                 .map(when(legIdIsNotSet)
                         .then(makeSafe(switchLeg))
-                        .then(new SimpleIspy<SQSMessage>("ribbon.set"))
                         .end())
                 .filter(LambdaEvent::isNotException)
                 .filter(not(legIdIsNotSet))

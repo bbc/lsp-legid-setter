@@ -9,6 +9,8 @@ from mediaservices_troposphere.policy import PolicyBuilder
 from mediaservices_troposphere.queue import QueuePatternPolicyBuilder
 from troposphere import Join, Parameter, Ref
 from troposphere.awslambda import Code
+from awacs.execute_api import Invoke, InvalidateCache
+
 
 if __name__ == '__main__':
 
@@ -20,6 +22,12 @@ if __name__ == '__main__':
     SHARED_RESOURCES_STACK = 'ModavSharedResources'
     STATE_API_STACK = 'ModavMediaLiveStateAPI'
     ENV = component_config.get(component_config.ENV)
+    ACCOUNT_NUMBERS = {
+        'int': '038610054328',  # modav-development
+        'test': '038610054328',  # modav-development
+        'live': '127888728614',  # modav-production
+    }
+    ACCOUNT = ACCOUNT_NUMBERS[component_config.get(component_config.ENV)]
 
     ribbon_url = Parameter(
         "RibbonUrl",
@@ -70,6 +78,13 @@ if __name__ == '__main__':
     t = lambda_builder.build()
 
     t.add_parameter(ribbon_url)
+
+    PolicyBuilder(
+        'StateAPIAccessRolePolicy',
+        [Invoke,
+         InvalidateCache],
+        ["arn:aws:execute-api:eu-west-1:"+ACCOUNT+":*/"+ENV.capitalize()+"MediaLiveStateAPI/*/*"]
+    ).add_to_template(t)
 
     queue_policy.add_to_template(t)
     IspyPolicyBuilder(RESOURCES_STACK).add_to_template(t)
