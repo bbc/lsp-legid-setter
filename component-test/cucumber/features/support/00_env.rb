@@ -9,9 +9,12 @@ require 'rest-assured'
 require 'rest-client'
 require 'mod_av_cucumber_env'
 
+require 'pry' # TODO: don't commit this line
+
 BeforeAll do
   QUEUES = {
-    BMQ: "#{CLOUD_ID}-lsp-legid-setter-BMQ"
+    BMQ: "#{CLOUD_ID}-lsp-legid-setter-BMQ",
+    FMQ: "#{CLOUD_ID}-lsp-legid-setter-FMQ"
   }.freeze
 
   SQS = ModavCucumber::SqsHelper.create_helper_with_queues(Aws::SQS::Client.new, QUEUES, check_all_empty: true)
@@ -34,9 +37,11 @@ BeforeAll do
     print_lines: true,
     env: {
       'BAD_MESSAGE_QUEUE_URL' => SQS.urls[:BMQ],
+      'FAIL_MESSAGE_QUEUE_URL' => SQS.urls[:FMQ],
       'RIBBON_URL' => 'http://127.0.0.1:5432',
       'ENVIRONMENT' => 'cucumber',
-      'STATE_API_CHANNELS_ENDPOINT' => 'http://127.0.0.1:5432/channels'
+      'STATE_API_CHANNELS_ENDPOINT' => 'http://127.0.0.1:5432/channels',
+      'STATE_API_LIVE_STREAM_ENDPOINT' => 'http://127.0.0.1:5432/livestreams'
     }
   )
   BASE_URL = under_test.base_url

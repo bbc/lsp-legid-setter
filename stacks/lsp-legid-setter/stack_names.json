@@ -33,6 +33,23 @@
         "region": "eu-west-1",
         "stack_name": "TestModavLspLegidSetterResources"
       }
+    },
+    "live": {
+      "component": {
+        "account_alias": "modav-production",
+        "region": "eu-west-1",
+        "stack_name": "LiveModavLspLegidSetter"
+      },
+      "ispy": {
+        "account_alias": "bbc-production",
+        "region": "eu-west-1",
+        "stack_name": "LiveModavLspLegidSetterIspy"
+      },
+      "resource": {
+        "account_alias": "modav-production",
+        "region": "eu-west-1",
+        "stack_name": "LiveModavLspLegidSetterResources"
+      }
     }
   }
 }

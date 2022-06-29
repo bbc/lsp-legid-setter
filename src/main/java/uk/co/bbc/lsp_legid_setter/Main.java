@@ -1,5 +1,6 @@
 package uk.co.bbc.lsp_legid_setter;
 
+import uk.co.bbc.freeman.aws.FailMessageHandler;
 import uk.co.bbc.freeman.ispy.IspyingExceptionHandler;
 import uk.co.bbc.freeman.aws.BadMessageHandler;
 
@@ -32,6 +33,7 @@ import uk.co.bbc.ispy.Ispyer;
 import uk.co.bbc.ispy.IspyerInstantiationException;
 import uk.co.bbc.ispy.core.IspyPreparer;
 import uk.co.bbc.lsp_legid_setter.exception.DeserialisationException;
+import uk.co.bbc.lsp_legid_setter.exception.FailQueueException;
 import uk.co.bbc.lsp_legid_setter.handler.EventbridgeDetailUnwrapper;
 import uk.co.bbc.lsp_legid_setter.handler.GetLegIdFromRibbon;
 import uk.co.bbc.lsp_legid_setter.handler.LivestreamEventParser;
@@ -56,6 +58,7 @@ public class Main implements RequestHandler<SQSEvent, Void> {
     private LegIdIsNotSet legIdIsNotSet;
     private Handler<SQSMessage> switchLeg;
     private BadMessageHandler badMessageHandler;
+    private FailMessageHandler failMessageHandler;
     private Ispyer ispyer;
 
     /**
@@ -88,6 +91,7 @@ public class Main implements RequestHandler<SQSEvent, Void> {
         event.getRecords().stream()
                 .map(LambdaEvent::new)
                 .map(addExceptionHandler(badMessageHandler, JsonParseException.class, DeserialisationException.class))
+                .map(addExceptionHandler(failMessageHandler, FailQueueException.class))
                 .map(addExceptionHandler(new IspyingExceptionHandler<>()))
                 .map(addIspyContextToEvent(ispyer, ISPY_EVENT_PREFIX))
                 .map(makeSafe(new MessageIdReceived(new SnsJsonExtractor())))
@@ -126,17 +130,19 @@ public class Main implements RequestHandler<SQSEvent, Void> {
             }
 
             badMessageHandler = new BadMessageHandler(clientProvider.provideSqsClient(), env.getBadMessageQueueUrl(), COMPONENT_NAME);
+            failMessageHandler = new FailMessageHandler(clientProvider.provideSqsClient(), env.getFailMessageQueueUrl(), COMPONENT_NAME);
+
             RibbonClient ribbonClient = new RibbonClient(new HttpClientProvider(env.getEnvironmentName()).provide(), env.getRibbonUrl());
-            getLegIdFromRibbon = new GetLegIdFromRibbon(ribbonClient);
             legIdIsNotSet = new LegIdIsNotSet();
             SigningAmazonWebServiceClient stateAPIClient = new SigningAmazonWebServiceClient(new DefaultAWSCredentialsProviderChain());
             LspMedialiveStateClient lspMedialiveStateClient = new LspMedialiveStateClient(
                     "",
                     env.getStateApiChannelsEndpoint(),
-                    "",
+                    env.getStateApiLiveStreamEndpointEndpoint(),
                     "",
                     "",
                     stateAPIClient);
+            getLegIdFromRibbon = new GetLegIdFromRibbon(ribbonClient, lspMedialiveStateClient);
             switchLeg = new SwitchLeg(ribbonClient, lspMedialiveStateClient);
         }
     }

@@ -38,8 +38,10 @@ if __name__ == '__main__':
 
     environment_variables = {
         'BAD_MESSAGE_QUEUE_URL': StackNameEnvImportValue(RESOURCES_STACK, 'BadMessageQueueUrl'),
+        'FAIL_MESSAGE_QUEUE_URL': StackNameEnvImportValue(RESOURCES_STACK, 'FailQueueUrl'),
         'ISPY_TOPIC_ARN': StackNameEnvImportValue(RESOURCES_STACK, 'IspyTopicArn'),
         'RIBBON_URL': Ref(ribbon_url),
+        'STATE_API_LIVE_STREAM_ENDPOINT': StackNameEnvImportValue(STATE_API_STACK, 'LivestreamsEndpoint'),
         'STATE_API_CHANNELS_ENDPOINT': StackNameEnvImportValue(STATE_API_STACK, 'ChannelsEndpoint')
     }
 
