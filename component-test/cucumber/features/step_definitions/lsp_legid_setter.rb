@@ -85,10 +85,36 @@ Given('Ribbon Put leg endpoint will respond with {int}') do |status|
   )
 end
 
+Given('Medialive State Api Get live stream endpoint will respond with {int} and workflow type {string}') do
+                                                                                      |status, workflow_type|
+  content = if status == 200
+              {
+                'cvid' => 'pips-pid-1234',
+                'workflow_type' => workflow_type,
+                'profile_name' => 'profile_name',
+                'tenant' => 'tenant',
+                'start_time' => '1578572375000',
+                'end_time' => '1578572375000',
+                'slate_input_name' => 'slateInputName',
+                'created_timestamp' => '1578572375000',
+                'last_update_timestamp' => '1578572375257'
+              }
+            else
+              {}
+            end
+  @state_get_live_stream_double = RestAssured::Double.create(
+    fullpath: '/livestreams?cvid=pips-pid-1234',
+    verb: 'GET',
+    status: status,
+    content: JSON.generate([content])
+  )
+end
+
 Given('Medialive State Api Get channels endpoint will respond with {int} and leg id {string}') do |status, legid|
   content = if status == 200
               {
                 'channel_arn' => 'Arn',
+                'workflow_type' => 'Event',
                 'state' => 'CREATING',
                 'cvid' => 'pips-pid-1234',
                 'active_input' => 'activeInput',
@@ -156,4 +182,11 @@ end
 
 Given('Medialive State Api Get channels endpoint is called') do
   @state_get_channel_double.wait_for_requests(1)
+end
+
+Then('a message appears in the Fail Message Queue') do
+  sqs_message = SQS.receive_message('FMQ', 30)
+  puts "FMQ: #{sqs_message}"
+
+  expect(sqs_message.body).to include('<failmsg>')
 end
