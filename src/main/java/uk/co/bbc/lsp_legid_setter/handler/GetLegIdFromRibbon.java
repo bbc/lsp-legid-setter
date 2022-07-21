@@ -37,15 +37,18 @@ public class GetLegIdFromRibbon implements Handler<SQSEvent.SQSMessage>{
         String cvid = livestreamEvent.getId();
         String legId = ribbonClient.getLegId(cvid);
 
-        IspyContext ispyContext = LambdaEventIspyContext.getIspyContextFromEvent(event);
+        if (legId != null) {
+            IspyContext ispyContext = LambdaEventIspyContext.getIspyContextFromEvent(event);
 
-        Optional<LivestreamRecord> livestreamRecordOptional = lspMedialiveStateClient.getLivestreamRecord(cvid);
-        final LivestreamRecord livestreamRecord = livestreamRecordOptional.
-                orElseThrow(() -> new StateApiException(String.format("Livestream record not found for cvid: %s", cvid), 200));
+            Optional<LivestreamRecord> livestreamRecordOptional = lspMedialiveStateClient.getLivestreamRecord(cvid);
+            final LivestreamRecord livestreamRecord = livestreamRecordOptional.
+                    orElseThrow(() -> new StateApiException(String.format("Livestream record not found for cvid: %s", cvid),
+                                    200));
 
-        Optional<ChannelRecord> channelRecordOptional = lspMedialiveStateClient.getChannelRecord(cvid);
-        final ChannelRecord channelRecord = channelRecordOptional
-                .orElseThrow(() -> new StateApiException(String.format("Channel record not found for cvid: %s", cvid), 200));
+            Optional<ChannelRecord> channelRecordOptional = lspMedialiveStateClient.getChannelRecord(cvid);
+            final ChannelRecord channelRecord = channelRecordOptional
+                    .orElseThrow(() -> new StateApiException(String.format("Channel record not found for cvid: %s", cvid),
+                                    200));
 
             if (!SIMULCAST.equalsIgnoreCase(livestreamRecord.getWorkflowType())) {
 
@@ -57,7 +60,7 @@ public class GetLegIdFromRibbon implements Handler<SQSEvent.SQSMessage>{
                             "Workflow type is not simulcast, throwing failQueue exception - House keep to clear");
                 }
             }
-
+        }
         return event.withProperty(LEG_ID, legId);
     }
 }

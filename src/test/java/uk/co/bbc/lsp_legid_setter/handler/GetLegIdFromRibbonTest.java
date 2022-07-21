@@ -2,6 +2,7 @@ package uk.co.bbc.lsp_legid_setter.handler;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.bbc.freeman.ispy.LambdaEventIspyContext.ISPY_CONTEXT_PROPERTY;
@@ -51,6 +52,22 @@ class GetLegIdFromRibbonTest {
         underTest = new GetLegIdFromRibbon(ribbonClient, lspMedialiveStateClient);
     }
 
+    @Test
+    void itGetLegId_is_null() throws Exception {
+        when(ribbonClient.getLegId("cvid")).thenReturn(null);
+
+        LivestreamEvent livestreamEvent = new LivestreamEvent.Builder().id("cvid").build();
+        LambdaEvent<SQSMessage> event = new LambdaEvent<>(new SQSEvent.SQSMessage()).withBody(livestreamEvent);
+        LambdaEvent<SQSMessage> apply = underTest.apply(event);
+
+        assertEquals(null, apply.getPropertyAs(String.class, "LEG_ID"));
+        assertEquals(livestreamEvent, apply.getBody(LivestreamEvent.class));
+
+        verify(lspMedialiveStateClient, never()).getLivestreamRecord("cvid");
+        verify(lspMedialiveStateClient, never()).getChannelRecord("cvid");
+        verify(ispyContext, never()).ispy("error.different-leg-id-exists.notification");
+        verify(ispyContext,never()).ispy("info.identical-leg-id-exists");
+    }
     @Test
     void itGetLegId_is_simulcast() throws Exception {
         when(ribbonClient.getLegId("cvid")).thenReturn("legid");
